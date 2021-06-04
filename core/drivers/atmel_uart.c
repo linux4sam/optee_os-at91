@@ -28,8 +28,13 @@
 
 #include <assert.h>
 #include <drivers/atmel_uart.h>
+#include <drivers/clk.h>
+#include <drivers/clk_dt.h>
+#include <drivers/pinctrl.h>
 #include <io.h>
 #include <keep.h>
+#include <kernel/dt.h>
+#include <matrix.h>
 #include <util.h>
 
 /* Register definitions */
@@ -55,7 +60,7 @@ static vaddr_t chip_to_base(struct serial_chip *chip)
 	struct atmel_uart_data *pd =
 		container_of(chip, struct atmel_uart_data, chip);
 
-	return io_pa_or_va(&pd->base, ATMEL_UART_SIZE);
+	return io_pa_or_va_secure(&pd->base, ATMEL_UART_SIZE);
 }
 
 static void atmel_uart_flush(struct serial_chip *chip)
@@ -102,3 +107,88 @@ void atmel_uart_init(struct atmel_uart_data *pd, paddr_t base)
 	 * everything for uart initialization is done in bootloader.
 	 */
 }
+
+#ifdef CFG_DT
+static struct serial_chip *atmel_uart_dev_alloc(void)
+{
+	struct atmel_uart_data *pd = calloc(1, sizeof(*pd));
+
+	if (!pd)
+		return NULL;
+
+	return &pd->chip;
+}
+
+static int atmel_uart_dev_init(struct serial_chip *chip, const void *fdt,
+			       int offs, const char *parms)
+{
+	size_t size = 0;
+	vaddr_t vbase = 0;
+	paddr_t pbase = 0;
+	struct clk *clk = NULL;
+	unsigned int matrix_id = 0;
+	TEE_Result res = TEE_ERROR_GENERIC;
+	struct pinctrl_state *state = NULL;
+	int status = _fdt_get_status(fdt, offs);
+	struct atmel_uart_data *pd =
+		container_of(chip, struct atmel_uart_data, chip);
+
+	if (status != DT_STATUS_OK_SEC)
+		return TEE_SUCCESS;
+
+	res = matrix_dt_get_id(fdt, offs, &matrix_id);
+
+	if (parms && parms[0])
+		IMSG("atmel_uart: device parameters ignored (%s)", parms);
+
+	if (dt_map_dev(fdt, offs, &vbase, &size, DT_MAP_AUTO) < 0)
+		return -1;
+
+	pbase = virt_to_phys((void *)vbase);
+	atmel_uart_init(pd, pbase);
+
+	res = pinctrl_get_state_by_name(fdt, offs, NULL, &state);
+	if (res)
+		return res;
+
+	res = pinctrl_apply_state(state);
+	if (res)
+		return res;
+
+	pinctrl_free_state(state);
+
+	res = clk_dt_get_by_index(fdt, offs, 0, &clk);
+	if (res)
+		return res;
+
+	clk_enable(clk);
+
+	return 0;
+}
+
+static void atmel_uart_dev_free(struct serial_chip *chip)
+{
+	struct atmel_uart_data *pd =
+		container_of(chip, struct atmel_uart_data, chip);
+
+	free(pd);
+}
+
+static const struct serial_driver atmel_uart_driver = {
+	.dev_alloc = atmel_uart_dev_alloc,
+	.dev_init = atmel_uart_dev_init,
+	.dev_free = atmel_uart_dev_free,
+};
+
+static const struct dt_device_match atmel_match_table[] = {
+	{ .compatible = "atmel,at91sam9260-usart" },
+	{ 0 }
+};
+
+DEFINE_DT_DRIVER(atmel_dt_driver) = {
+	.name = "atmel_uart",
+	.match_table = atmel_match_table,
+	.driver = &atmel_uart_driver,
+};
+
+#endif /* CFG_DT */
