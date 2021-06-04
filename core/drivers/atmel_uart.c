@@ -28,8 +28,11 @@
 
 #include <assert.h>
 #include <drivers/atmel_uart.h>
+#include <drivers/clk.h>
+#include <drivers/clk_dt.h>
 #include <io.h>
 #include <keep.h>
+#include <kernel/dt.h>
 #include <util.h>
 
 /* Register definitions */
@@ -102,3 +105,62 @@ void atmel_uart_init(struct atmel_uart_data *pd, paddr_t base)
 	 * everything for uart initialization is done in bootloader.
 	 */
 }
+
+#ifdef CFG_DT
+static struct serial_chip *atmel_uart_dev_alloc(void)
+{
+	struct atmel_uart_data *pd = calloc(1, sizeof(*pd));
+
+	if (!pd)
+		return NULL;
+
+	return &pd->chip;
+}
+
+static int atmel_uart_dev_init(struct serial_chip *chip, const void *fdt,
+			       int offs, const char *parms)
+{
+	struct atmel_uart_data *pd =
+		container_of(chip, struct atmel_uart_data, chip);
+	vaddr_t vbase = 0;
+	paddr_t pbase = 0;
+	size_t size = 0;
+
+	if (parms && parms[0])
+		IMSG("atmel_uart: device parameters ignored (%s)", parms);
+
+	if (dt_map_dev(fdt, offs, &vbase, &size) < 0)
+		return -1;
+
+	pbase = virt_to_phys((void *)vbase);
+	atmel_uart_init(pd, pbase);
+
+	return 0;
+}
+
+static void atmel_uart_dev_free(struct serial_chip *chip)
+{
+	struct atmel_uart_data *pd =
+		container_of(chip, struct atmel_uart_data, chip);
+
+	free(pd);
+}
+
+static const struct serial_driver atmel_uart_driver = {
+	.dev_alloc = atmel_uart_dev_alloc,
+	.dev_init = atmel_uart_dev_init,
+	.dev_free = atmel_uart_dev_free,
+};
+
+static const struct dt_device_match atmel_match_table[] = {
+	{ .compatible = "atmel,at91sam9260-usart" },
+	{ 0 }
+};
+
+DEFINE_DT_DRIVER(atmel_dt_driver) = {
+	.name = "atmel_uart",
+	.match_table = atmel_match_table,
+	.driver = &atmel_uart_driver,
+};
+
+#endif /* CFG_DT */
