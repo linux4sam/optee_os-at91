@@ -42,6 +42,9 @@ CFG_MMAP_REGIONS ?= 24
 CFG_SHMEM_START  ?= 0x21000000
 CFG_SHMEM_SIZE   ?= 0x400000
 
+CFG_SCMI_SHMEM_START  ?= 0x21400000
+CFG_SCMI_SHMEM_SIZE   ?= 0x1000
+
 CFG_TEE_RAM_VA_SIZE ?= 0x100000
 
 # Device tree related configuration
@@ -71,4 +74,13 @@ CFG_ATMEL_PM_SUSPEND_MODE ?= 0
 
 $(call force,CFG_ATMEL_SHDWC,y)
 $(call force,CFG_PM_ARM32,y)
+endif
+
+# SCMI related configuration
+CFG_SCMI_PTA ?= y
+
+CFG_SCMI_MSG_DRIVERS ?= y
+ifeq ($(CFG_SCMI_MSG_DRIVERS),y)
+$(call force,CFG_SCMI_MSG_SMT,y)
+$(call force,CFG_SCMI_MSG_CLOCK,y)
 endif
