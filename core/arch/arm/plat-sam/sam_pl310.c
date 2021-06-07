@@ -35,6 +35,7 @@
 #include <sm/sm.h>
 #include <types_ext.h>
 #include <sama5d2.h>
+#include <smc_ids.h>
 
 #include <sam_pl310.h>
 #include <sam_sfr.h>
@@ -81,4 +82,11 @@ void arm_cl2_enable(vaddr_t pl310_base)
 {
 	/* Enable PL310 ctrl -> only set lsb bit */
 	io_write32(pl310_base + PL310_CTRL, 1);
+}
+
+enum sm_handler_ret sam_pl310_write_reg(struct thread_smc_args *args)
+{
+	/* PL310 register access is currently ignored */
+	args->a0 = SAMA5_SMC_SIP_RETURN_SUCCESS;
+	return SM_HANDLER_SMC_HANDLED;
 }
