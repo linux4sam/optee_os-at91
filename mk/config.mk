@@ -681,3 +681,8 @@ ifeq (,$(CFG_HWRNG_QUALITY))
 $(error CFG_HWRNG_QUALITY not defined)
 endif
 endif
+
+# When enabled, CFG_DRIVERS_CLK_SUPPORT embeds a clock framwork in OP-TEE core.
+# This clock framework allows to describe clock tree and provide functions to
+# get and configure the clocks.
+CFG_DRIVERS_CLK_SUPPORT ?= n
