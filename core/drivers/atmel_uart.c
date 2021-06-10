@@ -156,6 +156,7 @@ static const struct dt_device_match atmel_match_table[] = {
 
 const struct dt_driver atmel_dt_driver __dt_driver = {
 	.name = "atmel_uart",
+	.type = DT_DRIVER_UART,
 	.match_table = atmel_match_table,
 	.driver = &atmel_uart_driver,
 };
