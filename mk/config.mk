@@ -686,6 +686,8 @@ endif
 # This clock framework allows to describe clock tree and provide functions to
 # get and configure the clocks.
 # CFG_DRIVERS_CLK_DT_SUPPORT embeds devicetree clock parsing support
+# CFG_DRIVERS_CLK_FIXED add support for "fixed-clock" compatible clocks
 CFG_DRIVERS_CLK_SUPPORT ?= n
 CFG_DRIVERS_CLK_DT_SUPPORT ?= $(call cfg-all-enabled,CFG_DRIVERS_CLK_SUPPORT CFG_DT)
 $(eval $(call cfg-depends-all,CFG_DRIVERS_CLK_DT_SUPPORT,CFG_DRIVERS_CLK_SUPPORT CFG_DT))
+CFG_DRIVERS_CLK_FIXED ?= $(CFG_DRIVERS_CLK_DT_SUPPORT)
