@@ -653,6 +653,7 @@ static int add_dt_overlay_fragment(struct dt_descriptor *dt, int ioffs)
 
 static int init_dt_overlay(struct dt_descriptor *dt, int __maybe_unused dt_size)
 {
+#if !defined(CFG_EXTERNAL_DTB_OVERLAY_ERASE_AT_BOOT)
 	int fragment;
 	int ret;
 
@@ -662,6 +663,7 @@ static int init_dt_overlay(struct dt_descriptor *dt, int __maybe_unused dt_size)
 			dt->frag_id += 1;
 		return ret;
 	}
+#endif
 
 #ifdef CFG_DT_ADDR
 	return fdt_create_empty_tree(dt->blob, dt_size);
