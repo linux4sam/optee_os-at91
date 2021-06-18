@@ -697,3 +697,8 @@ CFG_DRIVERS_CLK_FIXED ?= $(CFG_DRIVERS_CLK_DT_SUPPORT)
 # each compatible node (if enabled) with the declared compatible.
 CFG_DRIVERS_GENERIC_PROBE ?= n
 $(eval $(call cfg-depends-all,CFG_DRIVERS_GENERIC_PROBE,CFG_DT))
+
+# When enabled, CFG_SCMI_MSG_USE_CLK_SUPPORT will embed SCMI clocks function using
+# the clock framework and define plat_scmi_clock* functions.
+CFG_SCMI_MSG_USE_CLK_SUPPORT ?= $(call cfg-all-enabled,CFG_DRIVERS_CLK_SUPPORT CFG_DT)
+$(eval $(call cfg-depends-all,CFG_SCMI_MSG_USE_CLK_SUPPORT,CFG_DRIVERS_CLK_SUPPORT CFG_DT))
