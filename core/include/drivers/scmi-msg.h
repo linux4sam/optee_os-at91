@@ -31,12 +31,14 @@ struct scmi_msg_channel;
  * @shm_size: Byte size of the shared memory for the SCMI channel
  * @busy: True when channel is busy, flase when channel is free
  * @threaded: True is executed in a threaded context, false otherwise
+ * @smc_id: Identifier of the SMC call needed for the SCMI channel
  */
 struct scmi_msg_channel {
 	struct io_pa_va shm_addr;
 	size_t shm_size;
 	bool busy;
 	bool threaded;
+	uint32_t smc_id;
 };
 
 #ifdef CFG_SCMI_MSG_SMT
