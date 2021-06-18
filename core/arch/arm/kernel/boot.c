@@ -75,7 +75,7 @@ DECLARE_KEEP_PAGER(sem_cpu_sync);
 #ifdef CFG_DT
 struct dt_descriptor {
 	void *blob;
-#ifdef CFG_EXTERNAL_DTB_OVERLAY
+#ifdef CFG_USE_DTB_OVERLAY
 	int frag_id;
 #endif
 };
@@ -630,7 +630,7 @@ static TEE_Result release_external_dt(void)
 }
 boot_final(release_external_dt);
 
-#ifdef CFG_EXTERNAL_DTB_OVERLAY
+#ifdef CFG_USE_DTB_OVERLAY
 static int add_dt_overlay_fragment(struct dt_descriptor *dt, int ioffs)
 {
 	char frag[32];
@@ -656,11 +656,13 @@ static int init_dt_overlay(struct dt_descriptor *dt, int __maybe_unused dt_size)
 	int fragment;
 	int ret;
 
-	ret = fdt_check_header(dt->blob);
-	if (!ret) {
-		fdt_for_each_subnode(fragment, dt->blob, 0)
-			dt->frag_id += 1;
-		return ret;
+	if (!IS_ENABLED(CFG_GENERATE_DTB_OVERLAY)) {
+		ret = fdt_check_header(dt->blob);
+		if (!ret) {
+			fdt_for_each_subnode(fragment, dt->blob, 0)
+				dt->frag_id += 1;
+			return ret;
+		}
 	}
 
 #ifdef CFG_DT_ADDR
@@ -680,7 +682,7 @@ static int init_dt_overlay(struct dt_descriptor *dt __unused,
 {
 	return 0;
 }
-#endif /* CFG_EXTERNAL_DTB_OVERLAY */
+#endif /* CFG_USE_DTB_OVERLAY */
 
 static int add_dt_path_subnode(struct dt_descriptor *dt, const char *path,
 			       const char *subnode)
@@ -856,7 +858,7 @@ static int add_res_mem_dt_node(struct dt_descriptor *dt, const char *name,
 		offs = 0;
 	}
 
-	if (IS_ENABLED(CFG_EXTERNAL_DTB_OVERLAY)) {
+	if (IS_ENABLED(CFG_USE_DTB_OVERLAY)) {
 		len_size = sizeof(paddr_t) / sizeof(uint32_t);
 		addr_size = sizeof(paddr_t) / sizeof(uint32_t);
 	} else {
