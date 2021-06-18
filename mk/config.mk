@@ -780,3 +780,8 @@ CFG_CORE_ASYNC_NOTIF ?= n
 
 $(eval $(call cfg-enable-all-depends,CFG_MEMPOOL_REPORT_LAST_OFFSET, \
 	 CFG_WITH_STATS))
+
+# When enabled, CFG_SCMI_MSG_USE_CLK will embed SCMI clocks function using
+# the clock framework and define plat_scmi_clock* functions.
+CFG_SCMI_MSG_USE_CLK ?= $(call cfg-all-enabled,CFG_DRIVERS_CLK CFG_DT)
+$(eval $(call cfg-depends-all,CFG_SCMI_MSG_USE_CLK,CFG_DRIVERS_CLK CFG_DT))
