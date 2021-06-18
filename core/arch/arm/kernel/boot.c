@@ -43,6 +43,12 @@
 #include <kernel/vfp.h>
 #endif
 
+#ifdef CFG_SCMI_MSG_DRIVERS
+#include <drivers/scmi.h>
+#include <drivers/scmi-msg.h>
+#include <string_ext.h>
+#endif
+
 /*
  * In this file we're using unsigned long to represent physical pointers as
  * they are received in a single register when OP-TEE is initially entered.
@@ -631,7 +637,49 @@ static TEE_Result release_external_dt(void)
 boot_final(release_external_dt);
 
 #ifdef CFG_EXTERNAL_DTB_OVERLAY
-static int add_dt_overlay_fragment(struct dt_descriptor *dt, int ioffs)
+
+static int dt_create_fixup_node(void *fdt, int fixup_offs, char *path)
+{
+	char *end = path + strlen(path);
+	char *p = path;
+	int offset = fixup_offs;
+
+	while (p < end) {
+		char *q;
+
+		while (*p == '/') {
+			p++;
+			if (p == end)
+				return offset;
+		}
+		q = memchr(p, '/', end - p);
+		if (!q)
+			q = end;
+		*q = '\0';
+
+		offset = fdt_add_subnode(fdt, offset, p);
+		p = q + 1;
+	}
+
+	return offset;
+}
+
+int dt_add_fixup_node(void *fdt, char *path)
+{
+	int offs;
+
+	offs = fdt_path_offset(fdt, "/__local_fixups__");
+	if (offs < 0) {
+		offs = fdt_add_subnode(fdt, 0, "__local_fixups__");
+		if (offs < 0)
+			return offs;
+	}
+
+	return dt_create_fixup_node(fdt, offs, path);
+}
+
+static int add_dt_overlay_fragment_path(struct dt_descriptor *dt, int ioffs,
+					const char *path)
 {
 	char frag[32];
 	int offs;
@@ -644,11 +692,31 @@ static int add_dt_overlay_fragment(struct dt_descriptor *dt, int ioffs)
 
 	dt->frag_id += 1;
 
-	ret = fdt_setprop_string(dt->blob, offs, "target-path", "/");
+	ret = fdt_setprop_string(dt->blob, offs, "target-path", path);
 	if (ret < 0)
 		return -1;
 
 	return fdt_add_subnode(dt->blob, offs, "__overlay__");
+}
+
+static int add_dt_overlay_fragment(struct dt_descriptor *dt, int ioffs)
+{
+	return add_dt_overlay_fragment_path(dt, ioffs, "/");
+}
+
+int dt_add_overlay_fragment(void *fdt, const char *path)
+{
+	struct dt_descriptor *dt = &external_dt;
+	int offs;
+
+	if (dt->blob != fdt)
+		return -1;
+
+	offs = fdt_path_offset(dt->blob, "/");
+	if (offs < 0)
+		return -1;
+
+	return add_dt_overlay_fragment_path(dt, offs, path);
 }
 
 static int init_dt_overlay(struct dt_descriptor *dt, int __maybe_unused dt_size)
@@ -908,7 +976,18 @@ static int add_res_mem_dt_node(struct dt_descriptor *dt, const char *name,
 	} else {
 		return -1;
 	}
-	return 0;
+	return offs;
+}
+
+int dt_add_reserved_memory(void *fdt, const char *name,
+			   paddr_t pa, size_t size)
+{
+	struct dt_descriptor *dt = &external_dt;
+
+	if (dt->blob != fdt)
+		return -1;
+
+	return add_res_mem_dt_node(dt, name, pa, size);
 }
 
 #ifdef CFG_CORE_DYN_SHM
@@ -1102,11 +1181,11 @@ static void update_external_dt(void)
 		panic("Failed to config PSCI");
 
 #ifdef CFG_CORE_RESERVED_SHM
-	if (mark_static_shm_as_reserved(dt))
+	if (mark_static_shm_as_reserved(dt) < 0)
 		panic("Failed to config non-secure memory");
 #endif
 
-	if (mark_tzdram_as_reserved(dt))
+	if (mark_tzdram_as_reserved(dt) < 0)
 		panic("Failed to config secure memory");
 }
 #else /*CFG_DT*/

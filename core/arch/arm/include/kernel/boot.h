@@ -85,6 +85,11 @@ void *get_embedded_dt(void);
 /* Returns external DTB if present, otherwise NULL */
 void *get_external_dt(void);
 
+int dt_add_overlay_fragment(void *fdt, const char *path);
+int dt_add_fixup_node(void *fdt, char *path);
+int dt_add_reserved_memory(void *fdt, const char *name,
+			   paddr_t pa, size_t size);
+
 unsigned long get_aslr_seed(void *fdt);
 
 void ffa_secondary_cpu_ep_register(vaddr_t secondary_ep);
