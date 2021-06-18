@@ -549,6 +549,11 @@ endif
 # an exploration based on compatible drivers found. It is default disabled.
 CFG_DRIVERS_DT_RECURSIVE_PROBE ?= n
 
+# When enabled, CFG_SCMI_MSG_USE_CLK will embed SCMI clocks function using
+# the clock framework and define plat_scmi_clock* functions.
+CFG_SCMI_MSG_USE_CLK ?= n
+$(eval $(call cfg-depends-all,CFG_SCMI_MSG_USE_CLK,CFG_DRIVERS_CLK))
+
 # This option enables OP-TEE to respond to SMP boot request: the Rich OS
 # issues this to request OP-TEE to release secondaries cores out of reset,
 # with specific core number and non-secure entry address.
