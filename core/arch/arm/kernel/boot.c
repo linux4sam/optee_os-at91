@@ -656,6 +656,10 @@ static int init_dt_overlay(struct dt_descriptor *dt, int __maybe_unused dt_size)
 	int fragment;
 	int ret;
 
+#ifdef CFG_EXTERNAL_DTB_OVERLAY_ERASE_AT_BOOT
+	memset(dt->blob, 0, dt_size);
+#endif
+
 	ret = fdt_check_header(dt->blob);
 	if (!ret) {
 		fdt_for_each_subnode(fragment, dt->blob, 0)
