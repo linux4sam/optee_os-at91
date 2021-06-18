@@ -18,6 +18,7 @@ $(call force,CFG_PL310_LOCKED,y)
 $(call force,CFG_AT91_MATRIX,y)
 $(call force,CFG_SM_PLATFORM_HANDLER,y)
 $(call force,CFG_GENERIC_CLK,y)
+$(call force,CFG_PSCI_ARM32,y)
 
 CFG_TZDRAM_START ?= 0x30000000
 CFG_TZDRAM_SIZE  ?= 0x1000000
