@@ -34,6 +34,7 @@ CFG_DRAM_SIZE    ?= 0x20000000
 # Device tree related configuration
 CFG_DT_ADDR ?= 0x21500000
 CFG_EXTERNAL_DTB_OVERLAY ?= y
+CFG_EXTERNAL_DTB_OVERLAY_ERASE_AT_BOOT ?= y
 
 # SCMI related configuration
 CFG_SCMI_PTA ?= y
