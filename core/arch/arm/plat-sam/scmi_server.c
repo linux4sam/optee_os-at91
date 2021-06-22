@@ -37,6 +37,7 @@ static const struct channel_resources scmi_channel[] = {
 		.channel = &(struct scmi_msg_channel){
 			.shm_addr = { .pa = SMT_BUFFER_BASE },
 			.shm_size = SMT_BUF_SLOT_SIZE,
+			.smc_id = SAMA5_SMC_SIP_SCMI_CALL_VAL,
 		},
 	},
 };
