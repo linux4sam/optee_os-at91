@@ -282,6 +282,11 @@ int clk_of_register_clk_provider(int nodeoffset,
 
 struct clk *clk_of_get_simple_clk(struct clk_of_phandle_args *args, void *data);
 
+#if defined(CFG_SCMI_MSG_DRIVERS)
+
+int clk_scmi_update_dt(uint32_t *scmi_clk_phandles, uint32_t scmi_chan_count);
+
+#endif
 #endif
 
 #endif /* CLK_H */

@@ -584,6 +584,134 @@ static void clk_setup_compatible(void *fdt, const char *compatible,
 	};
 }
 
+#if defined(CFG_SCMI_MSG_DRIVERS)
+
+#define DT_MAX_PATH_LEN		200
+
+static void clk_scmi_add_fragment(void *fdt, int offs,
+				  uint32_t *scmi_clk_phandles,
+				  uint32_t scmi_chan_count)
+{
+	struct clk *clk;
+	uint32_t phandle;
+	char path[DT_MAX_PATH_LEN];
+	void *ext_fdt = get_external_dt();
+	int node, clk_idx = 0, fixup_node, ret;
+
+	/*
+	 * If the node is a provider, then do not patch it, since it does not
+	 * rely on a SCMI clock for sure...
+	 */
+	if (clk_get_provider(offs))
+		return;
+
+	ret = fdt_get_path(fdt, offs, path, DT_MAX_PATH_LEN);
+	if (ret < 0)
+		panic();
+
+	node = dt_add_overlay_fragment(ext_fdt, path);
+	if (node < 0)
+		panic();
+
+	while (1) {
+		clk = clk_of_get_by_idx(fdt, offs, clk_idx);
+		if (!clk)
+			break;
+
+		if (clk->scmi_channel_id >= scmi_chan_count)
+			panic();
+
+		phandle = scmi_clk_phandles[clk->scmi_channel_id];
+
+		ret = fdt_appendprop_u32(ext_fdt, node, "clocks", phandle);
+		if (ret < 0)
+			panic();
+
+		ret = fdt_appendprop_u32(ext_fdt, node, "clocks", clk->scmi_id);
+		if (ret < 0)
+			panic();
+		clk_idx++;
+	};
+
+	if (clk_idx == 0)
+		return;
+
+	ret = fdt_get_path(ext_fdt, node, path, DT_MAX_PATH_LEN);
+	if (ret < 0)
+		panic();
+
+	fixup_node = dt_add_fixup_node(ext_fdt, path);
+	if (fixup_node < 0)
+		panic();
+
+	/* SCMI clock-cells is always equal to 1 */
+	for (int i = 0; i < clk_idx; i++) {
+		ret = fdt_appendprop_u32(ext_fdt, fixup_node, "clocks", i * 8);
+		if (ret < 0)
+			panic();
+	}
+}
+
+static void clk_scmi_patch_dt_node(void *fdt, int offs,
+				   uint32_t *scmi_clk_phandles,
+				   uint32_t scmi_chan_count)
+{
+	int node, status;
+
+	fdt_for_each_subnode(node, fdt, offs) {
+		clk_scmi_patch_dt_node(fdt, node, scmi_clk_phandles,
+				       scmi_chan_count);
+
+		status = _fdt_get_status(fdt, node);
+		if (!(status & DT_STATUS_OK_NSEC))
+			continue;
+
+		if (fdt_getprop(fdt, node, "clocks", NULL))
+			clk_scmi_add_fragment(fdt, node, scmi_clk_phandles,
+					      scmi_chan_count);
+	}
+}
+
+static void clk_scmi_disable_secure_clocks(void *fdt)
+{
+	struct clk_of_provider *prv;
+	char path[DT_MAX_PATH_LEN];
+	int node, ret;
+	void *ext_fdt = get_external_dt();
+
+	SLIST_FOREACH(prv, &clk_of_provider_list, link) {
+		/*
+		 * We want to disable controllers that are enabled as secure
+		 * only in the device tree.
+		 */
+		if (_fdt_get_status(fdt, prv->nodeoffset) != DT_STATUS_OK_SEC)
+			continue;
+
+		fdt_get_path(fdt, prv->nodeoffset, path, DT_MAX_PATH_LEN);
+
+		node = dt_add_overlay_fragment(ext_fdt, path);
+		if (node < 0)
+			panic();
+
+		ret = dt_enable_secure_status(ext_fdt, node);
+		if (ret < 0)
+			panic();
+	}
+}
+
+int clk_scmi_update_dt(uint32_t *scmi_clk_phandles, uint32_t scmi_chan_count)
+{
+	void *fdt = get_embedded_dt();
+
+	clk_scmi_disable_secure_clocks(fdt);
+
+	clk_scmi_patch_dt_node(fdt, -1, scmi_clk_phandles, scmi_chan_count);
+
+	return 0;
+}
+
+#endif
+
 static TEE_Result clk_probe(void)
 {
 	const struct dt_device_match *dm;
