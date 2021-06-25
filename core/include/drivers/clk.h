@@ -56,6 +56,10 @@ struct clk_ops {
  * @parent: Current parent
  * @num_parents: Number of parents
  * @rate: Current clock rate (cached after init or rate change)
+ * @scmi_id: SCMI identifier for the clock (used by the generic SCMI clock
+ *	     support)
+ * @scmi_channel_id: SCMI channel for the clock (used by the generic SCMI clock
+ *	     support)
  * @flags: Specific clock flags
  * @enabled: Clock state (cached)
  * @link: Entry in the linked list of clocks
@@ -189,5 +193,49 @@ struct clk *clk_get_parent_by_index(struct clk *clk, unsigned int pidx);
  * @pidx: parent index to set
  */
 int clk_set_parent(struct clk *clk, unsigned int pidx);
+
+#if defined(CFG_SCMI_MSG_DRIVERS)
+
+/**
+ * clk_scmi_get_by_id - Get a clock by its SCMI id
+ *
+ * @channel_id: SCMI channel id for which the clock is needed
+ * @scmi_id: SCMI id for which the clock is needed
+ * Return a clock struct matching the SCMI ID or NULL if any.
+ */
+struct clk *clk_scmi_get_by_id(unsigned int channel_id, unsigned int scmi_id);
+
+/**
+ * clk_scmi_get_count - Return the count of SCMI clocks available
+ * @channel_id: SCMI channel id for which the count of clock is needed
+ */
+unsigned int clk_scmi_get_count(unsigned int channel_id);
+
+/**
+ * clk_scmi_set_id - Set a clock SCMI ID
+ *
+ * @clk: Clock to be assigned the SCMI ID
+ * @channel_id: SCMI channel ID to be associated with the clock
+ * @scmi_id: SCMI ID to be associated with the clock
+ * Returns 0 on success or a negative value if duplicated ID
+ */
+int clk_scmi_set_ids(struct clk *clk, unsigned int channel_id,
+		     unsigned int scmi_id);
+
+/**
+ * clk_scmi_get_rates_array - Get rates array for SCMI clocks
+ *
+ * @clk: Clock for which the rates are needed
+ * @start_index: Start index of the rate query
+ * @rates: Array of rates that are filled by the function
+ * @nb_elts: Maximum number of rates on input, filled with number of rates
+ *	     that have been filled on output.
+ * Returns 0 on success or a negative value on error.
+ */
+int clk_scmi_get_rates_array(struct clk *clk, size_t start_index,
+			     unsigned long *rates, size_t *nb_elts);
+
+#endif
+
 
 #endif /* CLK_H */

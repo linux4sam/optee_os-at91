@@ -252,3 +252,104 @@ struct clk *clk_get_parent(struct clk *clk)
 {
 	return clk->parent;
 }
+
+#if defined(CFG_SCMI_MSG_DRIVERS)
+
+static int clk_check_scmi_id(struct clk *clk, int scmi_id)
+{
+	struct clk *tclk;
+
+	if (scmi_id == CLK_NO_SCMI_ID)
+		return 0;
+
+	SLIST_FOREACH(tclk, &clk_list, link) {
+		if (clk->scmi_channel_id == tclk->scmi_channel_id &&
+		    tclk->scmi_id == scmi_id) {
+			EMSG("Clock for SCMI channel %d, id %d already registered !\n",
+			     clk->scmi_channel_id, clk->scmi_id);
+			return 1;
+		}
+	}
+
+	if (strlen(clk->name) >= SCMI_MAX_CLK_NAME_LEN)
+		return 1;
+
+	return 0;
+}
+
+struct clk *clk_scmi_get_by_id(unsigned int scmi_channel_id, unsigned int scmi_id)
+{
+	struct clk *clk;
+
+	SLIST_FOREACH(clk, &clk_list, link) {
+		if (clk->scmi_id == (int)scmi_id)
+			return clk;
+	}
+
+	return NULL;
+}
+
+unsigned int clk_scmi_get_count(unsigned int channel_id)
+{
+	struct clk *clk;
+	int max_id = -1;
+
+	SLIST_FOREACH(clk, &clk_list, link) {
+		if (clk->scmi_channel_id != channel_id)
+			continue;
+		if (clk->scmi_id > max_id)
+			max_id = clk->scmi_id;
+	}
+
+	return max_id + 1;
+}
+
+int clk_scmi_set_ids(struct clk *clk, unsigned int channel_id,
+		     unsigned int scmi_id)
+{
+	int ret;
+
+	ret = clk_check_scmi_id(clk, scmi_id);
+	if (ret)
+		return ret;
+
+	clk->scmi_channel_id = channel_id;
+	clk->scmi_id = scmi_id;
+	return 0;
+}
+
+static int clk_scmi_dummy_rates(struct clk *clk, size_t start_index,
+				unsigned long *rates, size_t *nb_elts)
+{
+	if (start_index)
+		return SCMI_GENERIC_ERROR;
+
+	if (!rates) {
+		*nb_elts = 1;
+		return SCMI_SUCCESS;
+	}
+
+	if (*nb_elts != 1)
+		return SCMI_GENERIC_ERROR;
+
+	rates[0] = clk_get_rate(clk);
+
+	return SCMI_SUCCESS;
+}
+
+int clk_scmi_get_rates_array(struct clk *clk, size_t start_index,
+			     unsigned long *rates, size_t *nb_elts)
+{
+	if (clk->flags & CLK_SET_RATE_PARENT)
+		clk = clk->parent;
+
+	/* Simply return the clock rate */
+	if (!clk->ops->get_rates_array)
+		return clk_scmi_dummy_rates(clk, start_index, rates, nb_elts);
+
+	if (clk->ops->get_rates_array(clk, start_index, rates, nb_elts))
+		return SCMI_GENERIC_ERROR;
+
+	return SCMI_SUCCESS;
+}
+#endif
