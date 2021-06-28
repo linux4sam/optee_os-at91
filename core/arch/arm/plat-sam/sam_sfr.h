@@ -6,6 +6,8 @@
 #ifndef SAM_SFR_H
 #define SAM_SFR_H
 
+#include <kernel/thread.h>
+#include <sm/sm.h>
 #include <util.h>
 
 /* OHCI INT Configuration Register */
@@ -30,5 +32,7 @@
 #define AT91_SFR_AICREDIR_KEY_MASK		GENMASK_32(31, 1)
 
 vaddr_t sam_sfr_base(void);
+
+enum sm_handler_ret sam_sfr_access_reg(struct thread_smc_args *args);
 
 #endif
