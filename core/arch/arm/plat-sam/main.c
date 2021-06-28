@@ -54,20 +54,6 @@ void console_init(void)
 	register_serial_console(&console_data.chip);
 }
 
-register_phys_mem_pgdir(MEM_AREA_IO_SEC, SFR_BASE, CORE_MMU_PGDIR_SIZE);
-
-vaddr_t sam_sfr_base(void)
-{
-	static void *va;
-
-	if (cpu_mmu_enabled()) {
-		if (!va)
-			va = phys_to_virt(SFR_BASE, MEM_AREA_IO_SEC, 1);
-		return (vaddr_t)va;
-	}
-	return SFR_BASE;
-}
-
 register_phys_mem_pgdir(MEM_AREA_IO_SEC, AT91C_BASE_MATRIX32,
 			CORE_MMU_PGDIR_SIZE);
 register_phys_mem_pgdir(MEM_AREA_IO_SEC, AT91C_BASE_MATRIX64,
