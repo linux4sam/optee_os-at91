@@ -29,7 +29,10 @@
 
 #include <io.h>
 #include <kernel/boot.h>
+#include <kernel/dt.h>
 #include <kernel/tz_ssvce_pl310.h>
+#include <libfdt.h>
+#include <matrix.h>
 #include <mm/core_mmu.h>
 #include <mm/core_memprot.h>
 #include <sm/sm.h>
@@ -119,3 +122,20 @@ err_perm:
 
 	return SM_HANDLER_SMC_HANDLED;
 }
+
+static TEE_Result sfr_set_secure(void)
+{
+	int node;
+	void *fdt = get_embedded_dt();
+
+	node = fdt_node_offset_by_compatible(fdt, 0, "atmel,sama5d2-sfr");
+	if (node < 0)
+		return TEE_ERROR_ITEM_NOT_FOUND;
+
+	if (_fdt_get_status(fdt, node) == DT_STATUS_OK_SEC)
+		matrix_configure_periph_secure(AT91C_ID_SFR);
+
+	return TEE_SUCCESS;
+}
+driver_init(sfr_set_secure);
+
