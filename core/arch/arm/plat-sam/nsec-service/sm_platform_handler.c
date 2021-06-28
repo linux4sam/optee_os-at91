@@ -13,6 +13,7 @@
 #include <smc_ids.h>
 
 #include <sam_pl310.h>
+#include <sam_sfr.h>
 
 static enum sm_handler_ret sam_sip_handler(struct thread_smc_args *args)
 {
@@ -21,6 +22,8 @@ static enum sm_handler_ret sam_sip_handler(struct thread_smc_args *args)
 	case SAMA5_SMC_SIP_L2X0_WRITE_REG:
 		return sam_pl310_write_reg(args);
 #endif
+	case SAMA5_SMC_SIP_SFR_REG_CALL_ID:
+		return sam_sfr_access_reg(args);
 	case SAMA5_SMC_SIP_SCMI_CALL_ID:
 		scmi_smt_fastcall_smc_entry(0);
 		args->a0 = SAMA5_SMC_SIP_RETURN_SUCCESS;
