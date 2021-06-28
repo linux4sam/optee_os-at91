@@ -6,6 +6,7 @@
 #ifndef SAM_SFR_H
 #define SAM_SFR_H
 
+#include <sm/sm.h>
 #include <util.h>
 
 #define AT91_SFR_DDRCFG		0x04	/* DDR Configuration Register */
@@ -15,6 +16,8 @@
 #define AT91_SFR_OHCIISR	0x14	/* OHCI INT Status Register */
 #define AT91_SFR_UTMICKTRIM	0x30	/* UTMI Clock Trimming Register */
 #define AT91_SFR_UTMISWAP	0x3c	/* UTMI DP/DM Pin Swapping Register */
+#define AT91_SFR_SN0		0x4c	/* Serial number 0 Register */
+#define AT91_SFR_SN1		0x50	/* Serial number 1 Register */
 #define AT91_SFR_L2CC_HRAMC     0x58    /* L2 cache RAM used as an internal SRAM */
 #define AT91_SFR_LS		0x7c	/* Light Sleep Register */
 #define AT91_SFR_I2SCLKSEL	0x90	/* I2SC Register */
@@ -48,5 +51,7 @@
 #define AT91_SFR_WPMR_WPKEY_MASK		GENMASK_32(31, 8)
 
 vaddr_t sam_sfr_base(void);
+
+enum sm_handler_ret sam_sfr_access_reg(struct thread_smc_args *args);
 
 #endif
