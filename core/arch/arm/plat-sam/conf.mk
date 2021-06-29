@@ -17,6 +17,7 @@ $(call force,CFG_PL310,y)
 $(call force,CFG_PL310_LOCKED,y)
 $(call force,CFG_AT91_MATRIX,y)
 $(call force,CFG_SM_PLATFORM_HANDLER,y)
+$(call force,CFG_DRIVERS_CLK_SUPPORT,y)
 
 CFG_TZDRAM_START ?= 0x30000000
 CFG_TZDRAM_SIZE  ?= 0x800000
