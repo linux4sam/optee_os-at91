@@ -173,8 +173,8 @@ static TEE_Result pmc_setup(const void *fdt, int nodeoffset)
 	if (dt_map_dev(fdt, nodeoffset, &base, &size) < 0)
 		panic();
 
-	if (_fdt_get_status(fdt, nodeoffset) == DT_STATUS_OK_SEC)
-		matrix_configure_periph_secure(AT91C_ID_PMC);
+	// if (_fdt_get_status(fdt, nodeoffset) == DT_STATUS_OK_SEC)
+	// 	matrix_configure_periph_secure(AT91C_ID_PMC);
 
 	slow_clk = clk_dt_get_by_name(fdt, nodeoffset, "slow_clk");
 	if (!slow_clk)
