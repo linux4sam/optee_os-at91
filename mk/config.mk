@@ -691,3 +691,9 @@ CFG_DRIVERS_CLK_SUPPORT ?= n
 CFG_DRIVERS_CLK_DT_SUPPORT ?= $(call cfg-all-enabled,CFG_DRIVERS_CLK_SUPPORT CFG_DT)
 $(eval $(call cfg-depends-all,CFG_DRIVERS_CLK_DT_SUPPORT,CFG_DRIVERS_CLK_SUPPORT CFG_DT))
 CFG_DRIVERS_CLK_FIXED ?= $(CFG_DRIVERS_CLK_DT_SUPPORT)
+
+# When enabled, CFG_DRIVERS_GENERIC_PROBE will embed code to support driver
+# declared with DT_DRIVER_GENERIC type. The setup function will be called for
+# each compatible node (if enabled) with the declared compatible.
+CFG_DRIVERS_GENERIC_PROBE ?= n
+$(eval $(call cfg-depends-all,CFG_DRIVERS_GENERIC_PROBE,CFG_DT))

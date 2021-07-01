@@ -55,6 +55,7 @@ struct dt_device_match {
 enum dt_driver_type {
 	DT_DRIVER_UART,
 	DT_DRIVER_CLK,
+	DT_DRIVER_GENERIC,
 };
 
 struct dt_driver {
