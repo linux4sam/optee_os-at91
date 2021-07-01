@@ -9,6 +9,7 @@
 #include <config.h>
 #include <console.h>
 #include <crypto/crypto.h>
+#include <drivers/clk_dt.h>
 #include <initcall.h>
 #include <inttypes.h>
 #include <keep.h>
@@ -1237,6 +1238,7 @@ void __weak boot_init_primary_late(unsigned long fdt)
 	tpm_map_log_area(get_external_dt());
 	discover_nsec_memory();
 	update_external_dt();
+	clk_dt_probe();
 	configure_console_from_dt();
 
 	IMSG("OP-TEE version: %s", core_v_str);
