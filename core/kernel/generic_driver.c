@@ -18,7 +18,7 @@
 static void driver_generic_probe_node(const void *fdt, int node, int status)
 {
 	TEE_Result ret;
-	const struct dt_driver *drv;
+	const struct dt_driver *drv = NULL;
 	const struct generic_driver *gdrv = NULL;
 
 	drv = dt_find_compatible_driver(fdt, node);
@@ -29,8 +29,8 @@ static void driver_generic_probe_node(const void *fdt, int node, int status)
 
 	ret = gdrv->setup(fdt, node, status);
 	if (ret)
-		EMSG("Failed to probe driver %s for device %s",
-			drv->name, fdt_get_name(fdt, node, NULL));
+		EMSG("Failed to probe driver %s for device %s, err %d",
+			drv->name, fdt_get_name(fdt, node, NULL), ret);
 }
 
 static void driver_generic_probe_child(const void *fdt, int parent_node)
@@ -63,4 +63,4 @@ static TEE_Result driver_generic_init(void)
 
 	return TEE_SUCCESS;
 }
-service_init(driver_generic_init);
+driver_init(driver_generic_init);
