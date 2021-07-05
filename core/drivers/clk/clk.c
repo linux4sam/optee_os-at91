@@ -302,11 +302,30 @@ out:
 	return res;
 }
 
+static TEE_Result clk_dummy_get_rates(struct clk *clk, size_t start_index,
+				      unsigned long *rates, size_t *nb_elts)
+{
+	if (start_index)
+		return TEE_ERROR_BAD_PARAMETERS;
+
+	if (!rates) {
+		*nb_elts = 1;
+		return TEE_SUCCESS;
+	}
+
+	if (*nb_elts != 1)
+		return TEE_ERROR_BAD_PARAMETERS;
+
+	rates[0] = clk_get_rate(clk);
+
+	return TEE_SUCCESS;
+}
+
 TEE_Result clk_get_rates_array(struct clk *clk, size_t start_index,
 			       unsigned long *rates, size_t *nb_elts)
 {
 	if (!clk->ops->get_rates_array)
-		return TEE_ERROR_NOT_SUPPORTED;
+		return clk_dummy_get_rates(clk, start_index, rates, nb_elts);
 
 	return clk->ops->get_rates_array(clk, start_index, rates, nb_elts);
 }
