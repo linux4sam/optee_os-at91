@@ -51,3 +51,5 @@ $(call force,CFG_SCMI_MSG_CLOCK,y)
 $(call force,CFG_SCMI_MSG_CLOCK_GENERIC,y)
 $(call force,CFG_SCMI_MSG_SMT_FASTCALL_ENTRY,y)
 endif
+
+CFG_AT91_RSTC ?= y
