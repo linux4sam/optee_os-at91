@@ -53,3 +53,4 @@ $(call force,CFG_SCMI_MSG_SMT_FASTCALL_ENTRY,y)
 endif
 
 CFG_AT91_RSTC ?= y
+CFG_AT91_SHDWC ?= y
