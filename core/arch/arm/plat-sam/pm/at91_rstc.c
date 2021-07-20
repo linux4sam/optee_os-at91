@@ -31,13 +31,6 @@ void __noreturn at91_rstc_reset(void)
 	uint32_t val = AT91_RSTC_CR_KEY | AT91_RSTC_CR_PROCRST |
 		       AT91_RSTC_CR_PERRST;
 
-	IMSG("Reset!!!!!!");
-	IMSG("Reset!!!!!!");
-	IMSG("Reset!!!!!!");
-	IMSG("Reset!!!!!!");
-	IMSG("Reset!!!!!!");
-	IMSG("Reset!!!!!!");
-
 	io_write32(rstc_base + AT91_RSTC_CR, val);
 
 	while(1);
