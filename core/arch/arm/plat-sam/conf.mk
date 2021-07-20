@@ -19,6 +19,7 @@ $(call force,CFG_AT91_MATRIX,y)
 $(call force,CFG_ATMEL_TCB,y)
 $(call force,CFG_SM_PLATFORM_HANDLER,y)
 $(call force,CFG_DRIVERS_CLK,y)
+$(call force,CFG_DRIVERS_GENERIC_PROBE,y)
 $(call force,CFG_PSCI_ARM32,y)
 
 # These values are forced because of matrix configuration for secure area.
