@@ -154,6 +154,15 @@ struct sam_clk sama5d2_progck[] = {
 
 #define PARENT_SIZE	MAX(ARRAY_SIZE(sama5d2_systemck), 6U)
 
+static struct pmc_data *pmc;
+
+vaddr_t at91_pmc_get_base(void)
+{
+	assert(pmc);
+
+	return pmc->base;
+}
+
 static TEE_Result pmc_setup(const void *fdt, int nodeoffset)
 {
 	size_t size;
@@ -162,7 +171,6 @@ static TEE_Result pmc_setup(const void *fdt, int nodeoffset)
 	int bypass = 0;
 	const uint32_t *fdt_prop;
 	struct pmc_clk *pmc_clk;
-	struct pmc_data *pmc;
 	const struct sam_clk *sam_clk;
 	struct clk_range range = CLK_RANGE(0, 0);
 	struct clk *h32mxck, *mckdivck, *plladivck, *usbck, *audiopll_pmcck;
