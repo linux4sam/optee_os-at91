@@ -96,6 +96,14 @@ int dt_enable_secure_status(void *fdt, int node)
 	return 0;
 }
 
+static enum teecore_memtypes dt_get_memtype(int status)
+{
+	if ((status & DT_STATUS_OK_SEC) && !(status & DT_STATUS_OK_NSEC))
+		return MEM_AREA_IO_SEC;
+
+	return MEM_AREA_IO_NSEC;
+}
+
 int dt_map_dev(const void *fdt, int offs, vaddr_t *base, size_t *size)
 {
 	enum teecore_memtypes mtype;
@@ -117,10 +125,7 @@ int dt_map_dev(const void *fdt, int offs, vaddr_t *base, size_t *size)
 	if (sz < 0)
 		return -1;
 
-	if ((st & DT_STATUS_OK_SEC) && !(st & DT_STATUS_OK_NSEC))
-		mtype = MEM_AREA_IO_SEC;
-	else
-		mtype = MEM_AREA_IO_NSEC;
+	mtype = dt_get_memtype(st);
 
 	/* Check if we have a mapping, create one if needed */
 	vbase = (vaddr_t)core_mmu_add_mapping(mtype, pbase, sz);
@@ -133,6 +138,20 @@ int dt_map_dev(const void *fdt, int offs, vaddr_t *base, size_t *size)
 	*base = vbase;
 	*size = sz;
 	return 0;
+}
+
+TEE_Result dt_unmap_dev(const void *fdt, int offs, vaddr_t base, size_t size)
+{
+	enum teecore_memtypes mtype = MEM_AREA_MAXTYPE;
+	int st;
+
+	st = _fdt_get_status(fdt, offs);
+	if (st == DT_STATUS_DISABLED)
+		return TEE_ERROR_BAD_STATE;
+
+	mtype = dt_get_memtype(st);
+
+	return core_mmu_remove_mapping(mtype, (void *) base, size);
 }
 
 /* Read a physical address (n=1 or 2 cells) */

@@ -12,6 +12,23 @@
 #include <stdint.h>
 #include <trace.h>
 
+int psci_system_suspend(uintptr_t entry __unused,
+			uint32_t context_id __unused,
+			struct sm_nsec_ctx *nsec)
+{
+	DMSG("system suspend");
+
+	/* Prepare suspend */
+
+	/* Enter suspend */
+
+	/* Exit suspend */
+
+	nsec->mon_lr = entry;
+
+	return PSCI_RET_SUCCESS;
+}
+
 void __noreturn psci_system_off(void)
 {
 	if (!at91_shdwc_available())

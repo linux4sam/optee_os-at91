@@ -9,8 +9,17 @@
 #include <compiler.h>
 #include <stdbool.h>
 
+#if defined(CFG_AT91_RSTC)
 bool at91_rstc_available(void);
 
 void __noreturn at91_rstc_reset(void);
+#else
+static inline bool at91_rstc_available(void)
+{
+	return false;
+}
+
+static inline void __noreturn at91_rstc_reset(void) {}
+#endif
 
 #endif /* AT91_RSTC_H */

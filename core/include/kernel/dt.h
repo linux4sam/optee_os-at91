@@ -11,6 +11,7 @@
 #include <stdint.h>
 #include <types_ext.h>
 #include <util.h>
+#include <tee_api_types.h>
 
 /*
  * Bitfield to reflect status and secure-status values ("okay", "disabled"
@@ -97,6 +98,18 @@ const struct dt_driver *__dt_driver_end(void);
 int dt_map_dev(const void *fdt, int offs, vaddr_t *base, size_t *size);
 
 /*
+ * Unmap a device previously mapped using dt_map_dev
+ *
+ * @fdt is the devicetree blob
+ * @offs is the offset of the node that describes the device in @fdt.
+ * @base virtual address of the zone to unmap
+ * @size size of the mapping
+ *
+ * Returns TEE_SUCCESS on success or a TEE_Result error compliant value.
+ */
+TEE_Result dt_unmap_dev(const void *fdt, int offs, vaddr_t base, size_t size);
+
+/*
  * Check whether the node at @offs contains the property with propname or not.
  *
  * @offs is the offset of the node that describes the device in @fdt.
@@ -180,6 +193,12 @@ static inline const struct dt_driver *dt_find_compatible_driver(
 
 static inline int dt_map_dev(const void *fdt __unused, int offs __unused,
 			     vaddr_t *vbase __unused, size_t *size __unused)
+{
+	return -1;
+}
+
+static inline int dt_unmap_dev(const void *fdt __unused, int offs __unused,
+			       vaddr_t *vbase __unused, size_t *size __unused)
 {
 	return -1;
 }
