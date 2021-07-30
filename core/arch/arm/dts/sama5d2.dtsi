@@ -998,6 +998,7 @@
 				#address-cells = <1>;
 				#size-cells = <1>;
 				no-memory-wc;
+				status = "disabled"; secure-status = "okay";     /* Secure only */
 				ranges = <0 0xf8044000 0x1420>;
 			};
 
@@ -1420,6 +1421,7 @@
 				compatible = "atmel,sama5d2-secumod", "syscon";
 				reg = <0xfc040000 0x100>;
 
+				status = "disabled"; secure-status = "okay";     /* Secure only */
 				gpio-controller;
 				#gpio-cells = <2>;
 			};
