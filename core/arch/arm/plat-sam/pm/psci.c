@@ -3,6 +3,7 @@
  * Copyright (c) 2021, Bootlin
  */
 
+#include "at91_pm.h"
 #include "at91_rstc.h"
 #include "at91_shdwc.h"
 #include <console.h>
@@ -11,6 +12,40 @@
 #include <sm/std_smc.h>
 #include <stdint.h>
 #include <trace.h>
+
+int psci_system_suspend(uintptr_t entry, uint32_t context_id __unused,
+			struct sm_nsec_ctx *nsec)
+{
+	if (!at91_pm_suspend_available())
+		return PSCI_RET_NOT_SUPPORTED;
+
+	if (at91_pm_suspend(entry, nsec))
+		return PSCI_RET_INTERNAL_FAILURE;
+
+	return PSCI_RET_SUCCESS;
+}
+
+int psci_cpu_suspend(uint32_t power_state,
+		     uintptr_t entry __unused, uint32_t context_id __unused,
+		     struct sm_nsec_ctx *nsec __unused)
+{
+	uint32_t type = 0;
+
+	if (at91_pm_suspend_available())
+		return PSCI_RET_NOT_SUPPORTED;
+
+	type = (power_state & PSCI_POWER_STATE_TYPE_MASK) >>
+		PSCI_POWER_STATE_TYPE_SHIFT;
+
+	if (type != PSCI_POWER_STATE_TYPE_STANDBY) {
+		DMSG("Power state %x not supported\n", type);
+		return PSCI_RET_INVALID_PARAMETERS;
+	}
+
+	at91_pm_cpu_idle();
+
+	return PSCI_RET_SUCCESS;
+}
 
 void __noreturn psci_system_off(void)
 {
@@ -44,6 +79,11 @@ int psci_features(uint32_t psci_fid)
 		return PSCI_RET_NOT_SUPPORTED;
 	case PSCI_SYSTEM_OFF:
 		if (at91_shdwc_available())
+			return PSCI_RET_SUCCESS;
+		return PSCI_RET_NOT_SUPPORTED;
+	case PSCI_CPU_SUSPEND:
+	case PSCI_SYSTEM_SUSPEND:
+		if (at91_pm_suspend_available())
 			return PSCI_RET_SUCCESS;
 		return PSCI_RET_NOT_SUPPORTED;
 	default:
