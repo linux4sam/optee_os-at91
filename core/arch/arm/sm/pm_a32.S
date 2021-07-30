@@ -49,6 +49,9 @@ UNWIND(	.cantunwind)
 	push	{r4 - r11}
 	read_midr r4
 	ubfx	r5, r4, #4, #12
+	ldr     r4, =CORTEX_A5_PART_NUM
+	cmp	r5, r4
+	beq	a7_suspend
 	ldr     r4, =CORTEX_A7_PART_NUM
 	cmp	r5, r4
 	beq	a7_suspend
@@ -142,6 +145,9 @@ FUNC sm_pm_cpu_do_resume, :
 UNWIND(	.cantunwind)
 	read_midr r4
 	ubfx	r5, r4, #4, #12
+	ldr     r4, =CORTEX_A5_PART_NUM
+	cmp	r5, r4
+	beq	a7_resume
 	ldr     r4, =CORTEX_A7_PART_NUM
 	cmp	r5, r4
 	beq	a7_resume
