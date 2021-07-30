@@ -92,7 +92,7 @@
 	};
 
 	ns_sram: sram@200000 {
-		compatible = "mmio-sram";
+		compatible = "mmio-sram", "atmel,sama5d2-sram";
 		reg = <0x00200000 0x20000>;
 		#address-cells = <1>;
 		#size-cells = <1>;
