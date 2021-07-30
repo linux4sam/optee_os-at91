@@ -49,6 +49,10 @@ void at91_pm_cpu_idle(void);
 
 TEE_Result sama5d2_pm_init(const void *fdt, vaddr_t shdwc);
 
+void at91_pm_set_suspend_mode(struct thread_smc_args *args);
+
+void at91_pm_get_suspend_mode(struct thread_smc_args *args);
+
 #else
 
 static inline void at91_pm_cpu_idle(void) {}
