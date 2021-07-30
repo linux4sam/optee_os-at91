@@ -97,6 +97,7 @@
 		#address-cells = <1>;
 		#size-cells = <1>;
 		ranges = <0 0x00200000 0x20000>;
+		status = "disabled"; secure-status = "okay";     /* Secure only */
 	};
 
 	scmi_clock_chan0 {

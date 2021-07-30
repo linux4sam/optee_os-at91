@@ -57,3 +57,17 @@ endif
 
 CFG_AT91_RSTC ?= y
 CFG_AT91_SHDWC ?= y
+CFG_AT91_PM ?= y
+
+ifeq ($(CFG_AT91_PM),y)
+# Suspend mode to be used on PSCI suspend call
+# 0 = STANDBY
+# 1 = ULP0
+# 2 = ULP0 Fast
+# 3 = ULP1
+# 4 = BACKUP
+CFG_AT91_PM_DEFAULT_SUSPEND_MODE ?= 0
+
+$(call force,CFG_PM_ARM32,y)
+$(call force,CFG_AT91_SHDWC,y)
+endif
