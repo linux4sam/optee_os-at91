@@ -6,6 +6,7 @@
 #define __DRIVERS_PM_SAM_ATMEL_PM_H
 
 #include <compiler.h>
+#include <kernel/thread.h>
 #include <stdbool.h>
 #include <tee_api_types.h>
 #include <types_ext.h>
@@ -24,6 +25,10 @@ void atmel_pm_cpu_idle(void);
 TEE_Result atmel_pm_suspend(uintptr_t entry, struct sm_nsec_ctx *nsec);
 
 TEE_Result sama5d2_pm_init(const void *fdt, vaddr_t shdwc);
+
+void at91_pm_set_suspend_mode(struct thread_smc_args *args);
+
+void at91_pm_get_suspend_mode(struct thread_smc_args *args);
 
 #else
 

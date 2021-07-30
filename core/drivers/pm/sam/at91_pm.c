@@ -15,6 +15,7 @@
 #include <libfdt.h>
 #include <matrix.h>
 #include <mm/core_memprot.h>
+#include <smc_ids.h>
 #include <sm/pm.h>
 #include <stdbool.h>
 #include <tee_api_types.h>
@@ -45,6 +46,25 @@ static struct at91bootstrap_bu {
 
 static vaddr_t at91_suspend_sram_base;
 static void (*at91_suspend_sram_fn)(struct at91_pm_data *);
+
+void at91_pm_set_suspend_mode(struct thread_smc_args *args)
+{
+	unsigned int mode = args->a1;
+	if (mode > AT91_PM_BACKUP) {
+		args->a0 = SAMA5_SMC_SIP_RETURN_EINVAL;
+		return;
+	}
+	DMSG("Setting suspend mode to %d", mode);
+
+	args->a0 = SAMA5_SMC_SIP_RETURN_SUCCESS;
+	soc_pm.mode = mode;
+}
+
+void at91_pm_get_suspend_mode(struct thread_smc_args *args)
+{
+	args->a1 = soc_pm.mode;
+	args->a0 = SAMA5_SMC_SIP_RETURN_SUCCESS;
+}
 
 static void at91_pm_copy_suspend_to_sram(void)
 {

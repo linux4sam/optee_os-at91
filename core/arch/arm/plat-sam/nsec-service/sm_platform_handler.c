@@ -3,6 +3,7 @@
  * Copyright (c) 2021, Microchip
  */
 
+#include <drivers/pm/sam/atmel_pm.h>
 #include <console.h>
 #include <drivers/scmi-msg.h>
 #include <io.h>
@@ -28,6 +29,14 @@ static enum sm_handler_ret sam_sip_handler(struct thread_smc_args *args)
 		scmi_smt_fastcall_smc_entry(0);
 		args->a0 = SAMA5_SMC_SIP_RETURN_SUCCESS;
 		break;
+#if defined(CFG_ATMEL_PM)
+	case SAMA5_SMC_SIP_SET_SUSPEND_MODE:
+		at91_pm_set_suspend_mode(args);
+		break;
+	case SAMA5_SMC_SIP_GET_SUSPEND_MODE:
+		at91_pm_get_suspend_mode(args);
+		break;
+#endif
 	default:
 		return SM_HANDLER_PENDING_SMC;
 	}
