@@ -37,9 +37,8 @@
 #include <tz_matrix.h>
 #include <trace.h>
 
-#define MATRIX_AXIMX	1
-#define MATRIX_H64MX	2
-#define MATRIX_H32MX	3
+#define MATRIX_H64MX	0
+#define MATRIX_H32MX	1
 
 #define SECURITY_TYPE_AS	1
 #define SECURITY_TYPE_NS	2
