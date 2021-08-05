@@ -27,16 +27,15 @@
  */
 #include <arm32.h>
 #include <io.h>
-#include <sama5d2.h>
-#include <platform_config.h>
-#include <stdint.h>
 #include <matrix.h>
-#include <tz_matrix.h>
+#include <platform_config.h>
+#include <sama5d2.h>
+#include <stdint.h>
 #include <trace.h>
+#include <tz_matrix.h>
 
-#define MATRIX_AXIMX	1
-#define MATRIX_H64MX	2
-#define MATRIX_H32MX	3
+#define MATRIX_H64MX	0
+#define MATRIX_H32MX	1
 
 #define SECURITY_TYPE_AS	1
 #define SECURITY_TYPE_NS	2
