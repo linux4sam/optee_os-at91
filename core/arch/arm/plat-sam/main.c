@@ -29,6 +29,7 @@
 #include <arm32.h>
 #include <console.h>
 #include <drivers/atmel_uart.h>
+#include <drivers/atmel_saic.h>
 #include <kernel/boot.h>
 #include <kernel/interrupt.h>
 #include <kernel/panic.h>
@@ -65,4 +66,6 @@ void main_init_gic(void)
 	res = atmel_saic_setup();
 	if (res)
 		panic("Failed to init interrupts\n");
+
+	matrix_interrupt_init();
 }

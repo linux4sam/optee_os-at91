@@ -26,6 +26,8 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include <arm32.h>
+#include <config.h>
+#include <drivers/atmel_saic.h>
 #include <initcall.h>
 #include <io.h>
 #include <kernel/interrupt.h>
@@ -42,6 +44,7 @@
 
 #define MATRIX_H64MX	0
 #define MATRIX_H32MX	1
+#define MATRIX_COUNT	2
 
 #define SECURITY_TYPE_AS	1
 #define SECURITY_TYPE_NS	2
@@ -52,6 +55,8 @@
 
 #define MATRIX_SPSELR_COUNT	3
 #define MATRIX_SLAVE_COUNT	15
+
+#define MATRIX_MASTER_COUNT	12
 
 register_phys_mem_pgdir(MEM_AREA_IO_SEC, AT91C_BASE_MATRIX32,
 			CORE_MMU_PGDIR_SIZE);
@@ -477,6 +482,84 @@ static unsigned int matrix_read(int base, unsigned int offset)
 	return io_read32(offset + base);
 }
 
+static vaddr_t matrix_get_base(unsigned int matrix)
+{
+	if (matrix == MATRIX_H32MX)
+		return matrix32_base();
+	else if (matrix == MATRIX_H64MX)
+		return matrix64_base();
+	else
+		return 0;
+}
+
+#include <sm/sm.h>
+
+static void matrix_disp_error(unsigned int matrix)
+{
+	uint8_t master = 0;
+	vaddr_t base = matrix_get_base(matrix);
+	uint32_t mesr = matrix_read(base, MATRIX_MESR);
+	paddr_t addr = 0;
+	struct sm_nsec_ctx *ctx = NULL;
+
+	if (mesr == 0) {
+		EMSG("Matrix %d it triggered but no error !", matrix);
+		return;
+	}
+
+	master = __builtin_ctz(mesr);
+	assert(master < MATRIX_MASTER_COUNT);
+
+	addr = matrix_read(base, MATRIX_MEAR(master));
+	ctx = sm_get_nsec_ctx();
+
+	EMSG("Matrix %d permission failure from master %d, address 0x%lx, mon_lr = 0x%"PRIx32,
+	     matrix, master, addr, ctx->mon_lr);
+}
+
+static enum itr_return matrix_it_handler(struct itr_handler *handler __unused)
+{
+	unsigned int matrix = (unsigned int) handler->data;
+
+	matrix_disp_error(matrix);
+
+	if (IS_ENABLED(CFG_AT91_MATRIX_PANIC_ON_VIOLATION))
+		panic();
+
+	return ITRR_HANDLED;
+}
+
+static struct itr_handler matrix_itr_handlers[MATRIX_COUNT] = {
+	{
+		.it = AT91C_ID_MATRIX0,
+		.handler = matrix_it_handler,
+		.data = (void *) MATRIX_H64MX,
+	},
+	{
+		.it = AT91C_ID_MATRIX1,
+		.handler = matrix_it_handler,
+		.data = (void *) MATRIX_H32MX,
+	}
+};
+
+void matrix_interrupt_init(void)
+{
+	int i = 0;
+	vaddr_t base = 0;
+
+	for (i = 0; i < MATRIX_COUNT; i++) {
+		itr_add_type_prio(&matrix_itr_handlers[i], IRQ_TYPE_LEVEL_HIGH,
+				  0);
+		itr_enable(matrix_itr_handlers[i].it);
+		base = matrix_get_base(i);
+
+		/* Enable errors interrupts for all masters */
+		matrix_write(base, MATRIX_MEIER, MATRIX_MASTER_COUNT - 1);
+		/* Unmask all masters */
+		matrix_write(base, MATRIX_MEIMR, MATRIX_MASTER_COUNT - 1);
+	}
+}
+
 static void matrix_write_protect_disable(unsigned int matrix_base)
 {
 	matrix_write(matrix_base, MATRIX_WPMR, MATRIX_WPMR_WPKEY_PASSWD);
@@ -859,6 +942,8 @@ struct matrix_state {
 	uint32_t ssr[MATRIX_SLAVE_COUNT];
 	uint32_t srtsr[MATRIX_SLAVE_COUNT];
 	uint32_t sassr[MATRIX_SLAVE_COUNT];
+	uint32_t meier;
+	uint32_t meimr;
 };
 
 static struct matrix_state matrix32_state;
@@ -876,10 +961,16 @@ static void matrix_save_regs(vaddr_t base, struct matrix_state *state)
 		state->srtsr[idx] = matrix_read(base, MATRIX_SRTSR(idx));
 		state->sassr[idx] = matrix_read(base, MATRIX_SASSR(idx));
 	}
+
+	state->meier = matrix_read(base, MATRIX_MEIER);
+	state->meimr = matrix_read(base, MATRIX_MEIMR);
 }
 
 static void matrix_suspend(void)
 {
+	itr_disable(AT91C_ID_MATRIX0);
+	itr_disable(AT91C_ID_MATRIX1);
+
 	matrix_save_regs(matrix32_base(), &matrix32_state);
 	matrix_save_regs(matrix64_base(), &matrix64_state);
 }
@@ -898,12 +989,18 @@ static void matrix_restore_regs(vaddr_t base, struct matrix_state *state)
 		matrix_write(base, MATRIX_SRTSR(idx), state->srtsr[idx]);
 		matrix_write(base, MATRIX_SASSR(idx), state->sassr[idx]);
 	}
+
+	matrix_write(base, MATRIX_MEIER, state->meier);
+	matrix_write(base, MATRIX_MEIMR, state->meimr);
 }
 
 static void matrix_resume(void)
 {
 	matrix_restore_regs(matrix32_base(), &matrix32_state);
 	matrix_restore_regs(matrix64_base(), &matrix64_state);
+
+	itr_enable(AT91C_ID_MATRIX0);
+	itr_enable(AT91C_ID_MATRIX1);
 }
 
 static TEE_Result matrix_pm(enum pm_op op, uint32_t pm_hint __unused,

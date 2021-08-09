@@ -33,4 +33,6 @@ int matrix_configure_periph_secure(unsigned int peri_id);
 
 void matrix_init(void);
 
+void matrix_interrupt_init(void);
+
 #endif /* #ifndef MATRIX_H */
