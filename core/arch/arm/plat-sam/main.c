@@ -351,4 +351,6 @@ void main_init_gic(void)
 {
 	if (atmel_saic_setup())
 		panic("Failed to init interrupts\n");
+
+	matrix_interrupt_init();
 }
