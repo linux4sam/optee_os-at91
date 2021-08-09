@@ -30,6 +30,7 @@
 #include <console.h>
 #include <drivers/atmel_uart.h>
 #include <kernel/boot.h>
+#include <kernel/interrupt.h>
 #include <kernel/panic.h>
 #include <matrix.h>
 #include <stdint.h>
@@ -50,4 +51,18 @@ void console_init(void)
 void plat_primary_init_early(void)
 {
 	matrix_init();
+}
+
+void itr_core_handler(void)
+{
+	atmel_saic_it_handle();
+}
+
+void main_init_gic(void)
+{
+	TEE_Result res = TEE_ERROR_GENERIC;
+
+	res = atmel_saic_setup();
+	if (res)
+		panic("Failed to init interrupts\n");
 }
