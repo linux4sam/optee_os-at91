@@ -26,19 +26,25 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include <arm32.h>
+#include <assert.h>
+#include <config.h>
+#include <drivers/atmel_saic.h>
 #include <initcall.h>
 #include <io.h>
+#include <kernel/interrupt.h>
 #include <kernel/pm.h>
 #include <kernel/panic.h>
 #include <matrix.h>
 #include <platform_config.h>
 #include <sama5d2.h>
+#include <sm/sm.h>
 #include <stdint.h>
 #include <tz_matrix.h>
 #include <trace.h>
 
 #define MATRIX_H64MX	0
 #define MATRIX_H32MX	1
+#define MATRIX_COUNT	2
 
 #define SECURITY_TYPE_AS	1
 #define SECURITY_TYPE_NS	2
@@ -49,6 +55,8 @@
 
 #define MATRIX_SPSELR_COUNT	3
 #define MATRIX_SLAVE_COUNT	15
+
+#define MATRIX_MASTER_COUNT	12
 
 struct peri_security {
 	unsigned int peri_id;
@@ -450,6 +458,82 @@ void matrix_write_protect_enable(unsigned int matrix_base)
 void matrix_write_protect_disable(unsigned int matrix_base)
 {
 	matrix_write(matrix_base, MATRIX_WPMR, MATRIX_WPMR_WPKEY_PASSWD);
+}
+
+static vaddr_t matrix_get_base(unsigned int matrix)
+{
+	if (matrix == MATRIX_H32MX)
+		return matrix32_base();
+	else if (matrix == MATRIX_H64MX)
+		return matrix64_base();
+	else
+		return 0;
+}
+
+static void matrix_disp_error(unsigned int matrix)
+{
+	uint8_t master = 0;
+	vaddr_t base = matrix_get_base(matrix);
+	uint32_t mesr = matrix_read(base, MATRIX_MESR);
+	paddr_t addr = 0;
+	struct sm_nsec_ctx *ctx = NULL;
+
+	if (mesr == 0) {
+		EMSG("Matrix %d it triggered but no error !", matrix);
+		return;
+	}
+
+	master = __builtin_ctz(mesr);
+	assert(master < MATRIX_MASTER_COUNT);
+
+	addr = matrix_read(base, MATRIX_MEAR(master));
+	ctx = sm_get_nsec_ctx();
+
+	EMSG("Matrix %d permission failure from master %d, address 0x%lx, mon_lr = 0x%"PRIx32,
+	     matrix, master, addr, ctx->mon_lr);
+}
+
+static enum itr_return matrix_it_handler(struct itr_handler *handler __unused)
+{
+	unsigned int matrix = (unsigned int) handler->data;
+
+	matrix_disp_error(matrix);
+
+	if (IS_ENABLED(CFG_AT91_MATRIX_PANIC_ON_VIOLATION))
+		panic();
+
+	return ITRR_HANDLED;
+}
+
+static struct itr_handler matrix_itr_handlers[MATRIX_COUNT] = {
+	{
+		.it = AT91C_ID_MATRIX0,
+		.handler = matrix_it_handler,
+		.data = (void *) MATRIX_H64MX,
+	},
+	{
+		.it = AT91C_ID_MATRIX1,
+		.handler = matrix_it_handler,
+		.data = (void *) MATRIX_H32MX,
+	}
+};
+
+void matrix_interrupt_init(void)
+{
+	int i = 0;
+	vaddr_t base = 0;
+
+	for (i = 0; i < MATRIX_COUNT; i++) {
+		itr_add_type_prio(&matrix_itr_handlers[i], IRQ_TYPE_LEVEL_HIGH,
+				  0);
+		itr_enable(matrix_itr_handlers[i].it);
+		base = matrix_get_base(i);
+
+		/* Enable errors interrupts for all masters */
+		matrix_write(base, MATRIX_MEIER, MATRIX_MASTER_COUNT - 1);
+		/* Unmask all masters */
+		matrix_write(base, MATRIX_MEIMR, MATRIX_MASTER_COUNT - 1);
+	}
 }
 
 void matrix_configure_slave_security(unsigned int matrix_base,
