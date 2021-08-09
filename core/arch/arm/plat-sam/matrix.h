@@ -44,4 +44,6 @@ int matrix_configure_periph_secure(unsigned int peri_id);
 vaddr_t matrix32_base(void);
 vaddr_t matrix64_base(void);
 
+void matrix_interrupt_init(void);
+
 #endif /* #ifndef MATRIX_H */
