@@ -32,7 +32,9 @@
 #include <mm/core_memprot.h>
 #include <mm/core_mmu.h>
 #include <sama5d2.h>
+#include <sam_pl310.h>
 #include <sam_sfr.h>
+#include <smc_ids.h>
 #include <types_ext.h>
 
 register_phys_mem_pgdir(MEM_AREA_IO_SEC, PL310_BASE, CORE_MMU_PGDIR_SIZE);
@@ -65,4 +67,12 @@ void arm_cl2_enable(vaddr_t pl310_base)
 {
 	/* Enable PL310 ctrl -> only set lsb bit */
 	io_write32(pl310_base + PL310_CTRL, 1);
+}
+
+enum sm_handler_ret sam_pl310_write_ctrl(struct thread_smc_args *args)
+{
+	io_write32(pl310_base() + PL310_CTRL, args->a1);
+	args->a0 = SAMA5_SMC_SIP_RETURN_SUCCESS;
+
+	return SM_HANDLER_SMC_HANDLED;
 }
