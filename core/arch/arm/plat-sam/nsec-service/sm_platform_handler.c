@@ -16,6 +16,10 @@
 static enum sm_handler_ret sam_sip_handler(struct thread_smc_args *args)
 {
 	switch (OPTEE_SMC_FUNC_NUM(args->a0)) {
+#if defined(CFG_PL310)
+	case SAMA5_SMC_SIP_L2X0_WRITE_REG:
+		return sam_pl310_write_reg(args);
+#endif
 	default:
 		return SM_HANDLER_PENDING_SMC;
 	}
