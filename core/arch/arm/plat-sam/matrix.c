@@ -489,8 +489,8 @@ static void matrix_disp_error(unsigned int matrix)
 	addr = matrix_read(base, MATRIX_MEAR(master));
 	ctx = sm_get_nsec_ctx();
 
-	EMSG("Matrix %d permission failure from master %d, address 0x%lx, mon_lr = 0x%"PRIx32,
-	     matrix, master, addr, ctx->mon_lr);
+	// EMSG("Matrix %d permission failure from master %d, address 0x%lx, mon_lr = 0x%"PRIx32,
+	//      matrix, master, addr, ctx->mon_lr);
 }
 
 static enum itr_return matrix_it_handler(struct itr_handler *handler __unused)
