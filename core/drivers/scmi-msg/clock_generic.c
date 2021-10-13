@@ -245,7 +245,7 @@ static TEE_Result scmi_clk_setup(const void *fdt, int nodeoffset,
 		res = scmi_parse_clock(channel_id, fdt, child);
 		if (res)
 			EMSG("Failed to parse SCMI clock node %s, error %d",
-			     fdt_get_name(fdt, nodeoffset, NULL), res);
+			     fdt_get_name(fdt, child, NULL), res);
 	}
 
 	return TEE_SUCCESS;
