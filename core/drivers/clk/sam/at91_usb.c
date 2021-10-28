@@ -75,11 +75,45 @@ static TEE_Result at91sam9x5_clk_usb_set_rate(struct clk *clk,
 	return TEE_SUCCESS;
 }
 
+static TEE_Result at91sam9x5_clk_usb_get_rates_array(struct clk *clk,
+						     size_t start_index,
+						     unsigned long *rates,
+						     size_t *nb_elts)
+{
+	int div = 0;
+	unsigned int rate_idx = 0;
+	unsigned long parent_rate = 0;
+	struct clk *parent = clk_get_parent(clk);
+
+	if (!rates) {
+		*nb_elts = SAM9X5_USB_DIV_COUNT;
+		return TEE_SUCCESS;
+	}
+
+	parent_rate = clk_get_rate(parent);
+
+	for (div = SAM9X5_USB_MAX_DIV; div >= 0; div--) {
+		if (start_index == 0) {
+			rates[rate_idx] = parent_rate / (div + 1);
+			rate_idx++;
+			if (rate_idx == *nb_elts)
+				return TEE_SUCCESS;
+		} else {
+			start_index--;
+		}
+	}
+
+	*nb_elts = rate_idx;
+
+	return TEE_SUCCESS;
+}
+
 static const struct clk_ops at91sam9x5_usb_ops = {
 	.get_rate = at91sam9x5_clk_usb_get_rate,
 	.get_parent = at91sam9x5_clk_usb_get_parent,
 	.set_parent = at91sam9x5_clk_usb_set_parent,
 	.set_rate = at91sam9x5_clk_usb_set_rate,
+	.get_rates_array = at91sam9x5_clk_usb_get_rates_array,
 };
 
 static struct clk *
