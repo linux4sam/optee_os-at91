@@ -6,8 +6,10 @@
 #include <drivers/pm/sam/atmel_pm.h>
 #include <console.h>
 #include <drivers/scmi-msg.h>
+#include <drivers/wdt.h>
 #include <io.h>
 #include <kernel/tee_misc.h>
+#include <kernel/thread.h>
 #include <mm/core_memprot.h>
 #include <sm/optee_smc.h>
 #include <sm/sm.h>
@@ -43,12 +45,17 @@ static enum sm_handler_ret sam_sip_handler(struct thread_smc_args *args)
 
 enum sm_handler_ret sm_platform_handler(struct sm_ctx *ctx)
 {
-	uint32_t *nsec_r0 = (uint32_t *)(&ctx->nsec.r0);
-	uint16_t smc_owner = OPTEE_SMC_OWNER_NUM(*nsec_r0);
+	struct thread_smc_args *args = (struct thread_smc_args *)&ctx->nsec.r0;
+	uint16_t smc_owner = OPTEE_SMC_OWNER_NUM(args->a0);
+	enum sm_handler_ret ret;
 
 	switch (smc_owner) {
 	case OPTEE_SMC_OWNER_SIP:
-		return sam_sip_handler((struct thread_smc_args *)nsec_r0);
+		ret  = wdt_sm_handler(args);
+		if (ret == SM_HANDLER_SMC_HANDLED)
+			return ret;
+
+		return sam_sip_handler(args);
 	default:
 		return SM_HANDLER_PENDING_SMC;
 	}

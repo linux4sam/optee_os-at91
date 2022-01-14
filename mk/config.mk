@@ -787,3 +787,7 @@ CFG_SCMI_MSG_USE_CLK ?= $(call cfg-all-enabled,CFG_DRIVERS_CLK CFG_DT)
 $(eval $(call cfg-depends-all,CFG_SCMI_MSG_USE_CLK,CFG_DRIVERS_CLK CFG_DT))
 
 CFG_WDT ?= n
+
+CFG_WDT_SM_HANDLER ?= n
+CFG_WDT_SM_HANDLER_ID ?= 0x82003D06
+$(eval $(call cfg-enable-all-depends,CFG_WDT_SM_HANDLER,CFG_WDT))
