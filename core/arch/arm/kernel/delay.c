@@ -27,8 +27,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <kernel/boot.h>
 #include <kernel/delay.h>
+#include <kernel/misc.h>
 
+#ifdef CFG_CORE_HAS_GENERIC_TIMER
 void udelay(uint32_t us)
 {
 	uint64_t target = timeout_init_us(us);
@@ -36,6 +39,18 @@ void udelay(uint32_t us)
 	while (!timeout_elapsed(target))
 		;
 }
+#else
+
+void udelay(uint32_t us)
+{
+	uint64_t cycles = 0;
+
+	cycles = (uint64_t)us * ((uint64_t)plat_get_freq() / 1000000ULL);
+	assert(cycles < (unsigned long)-1);
+
+	wait_cycles((unsigned long) cycles);
+}
+#endif
 
 void mdelay(uint32_t ms)
 {
