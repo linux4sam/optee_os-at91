@@ -98,3 +98,5 @@ ifeq ($(CFG_WDT_SM_HANDLER),y)
 CFG_WDT_SM_HANDLER_ID := 0x2000500
 endif
 CFG_ATMEL_WDT ?= y
+
+$(call force,CFG_CORE_HAS_GENERIC_TIMER,n)
