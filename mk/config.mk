@@ -796,3 +796,5 @@ CFG_CORE_HAS_GENERIC_TIMER ?= y
 
 # Enable RTC API
 CFG_RTC ?= n
+# Enable PTA for RTC access
+CFG_RTC_PTA ?= n
