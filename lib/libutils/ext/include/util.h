@@ -86,6 +86,15 @@
 	(__extension__ ({ __typeof__(x) _x = (x); \
 	  __typeof__(y) _y = (y); \
 	  (_x + (_y / 2)) / _y; }))
+
+/*
+ * Divide a positive dividend with a positive or negative divisor and round
+ * to the nearest value.
+ */
+#define DIV_ROUND_NEAREST(x, y) \
+	(__extension__ ({ __typeof__(x) _x = (x); \
+	  __typeof__(y) _y = (y); \
+	  y < 0 ? (_x - (_y / 2)) / _y : (_x + (_y / 2)) / _y; }))
 #else
 #define ROUNDUP(x, y)			((((x) + (y) - 1) / (y)) * (y))
 #define ROUNDDOWN(x, y)		(((x) / (y)) * (y))
