@@ -793,3 +793,6 @@ CFG_WDT_SM_HANDLER_ID ?= 0x82003D06
 $(eval $(call cfg-enable-all-depends,CFG_WDT_SM_HANDLER,CFG_WDT))
 
 CFG_CORE_HAS_GENERIC_TIMER ?= y
+
+# Enable RTC API
+CFG_RTC ?= n
