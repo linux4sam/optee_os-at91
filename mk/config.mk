@@ -798,3 +798,7 @@ CFG_CORE_HAS_GENERIC_TIMER ?= y
 CFG_RTC ?= n
 # Enable PTA for RTC access
 CFG_RTC_PTA ?= n
+
+# When enabled, CFG_DRIVERS_RSTCTRL embeds a reset controller framework in
+# OP-TEE core to provide reset controls on subsystems of the devices.
+CFG_DRIVERS_PINCTRL ?= n
