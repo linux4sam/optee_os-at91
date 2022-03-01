@@ -184,7 +184,6 @@
 				sda-gpios = <&pioA PIN_PD21 GPIO_ACTIVE_HIGH>;
 				scl-gpios = <&pioA PIN_PD22 (GPIO_ACTIVE_HIGH | GPIO_OPEN_DRAIN)>;
 				i2c-sda-hold-time-ns = <350>;
-				status = "okay";
 
 				pmic@5b {
 					compatible = "active-semi,act8945a";
@@ -419,7 +418,10 @@
 				status = "okay";
 			};
 
-			pinctrl@fc038000 {
+			pioA: pinctrl@fc039000 {
+				status = "disabled";
+				secure-status = "okay";
+
 				/*
 				 * There is no real pinmux for ADC, if the pin
 				 * is not requested by another peripheral then
