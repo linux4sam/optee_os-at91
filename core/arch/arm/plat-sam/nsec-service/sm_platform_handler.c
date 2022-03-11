@@ -16,6 +16,7 @@
 #include <smc_ids.h>
 
 #include <sam_pl310.h>
+#include <sam_sfr.h>
 
 static enum sm_handler_ret sam_sip_handler(struct thread_smc_args *args)
 {
@@ -26,6 +27,18 @@ static enum sm_handler_ret sam_sip_handler(struct thread_smc_args *args)
 #endif
 	case SAMA5_SMC_SIP_SCMI_CALL_ID:
 		scmi_smt_fastcall_smc_entry(0);
+		args->a0 = SAMA5_SMC_SIP_RETURN_SUCCESS;
+		break;
+	case SAMA5_SIP_SFR_SET_USB_SUSPEND:
+		atmel_sfr_set_usb_suspend(args->a1);
+		args->a0 = SAMA5_SMC_SIP_RETURN_SUCCESS;
+		break;
+	case SAMA5_SIP_SFR_READ_SN0:
+		args->a1 = atmel_sfr_read_sn0();
+		args->a0 = SAMA5_SMC_SIP_RETURN_SUCCESS;
+		break;
+	case SAMA5_SIP_SFR_READ_SN1:
+		args->a1 = atmel_sfr_read_sn1();
 		args->a0 = SAMA5_SMC_SIP_RETURN_SUCCESS;
 		break;
 #if defined(CFG_ATMEL_PM)
