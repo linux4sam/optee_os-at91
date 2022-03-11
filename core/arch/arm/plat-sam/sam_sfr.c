@@ -57,6 +57,28 @@ vaddr_t sam_sfr_base(void)
 	return SFR_BASE;
 }
 
+uint32_t atmel_sfr_read_sn0(void)
+{
+	return io_read32(sam_sfr_base() + AT91_SFR_SN0);
+}
+
+uint32_t atmel_sfr_read_sn1(void)
+{
+	return io_read32(sam_sfr_base() + AT91_SFR_SN1);
+}
+
+void atmel_sfr_set_usb_suspend(bool set)
+{
+	uint32_t regval = io_read32(sam_sfr_base() + AT91_SFR_OHCIICR);
+
+	if (set)
+		regval |= AT91_OHCIICR_USB_SUSPEND;
+	else
+		regval &= ~AT91_OHCIICR_USB_SUSPEND;
+
+	io_write32(sam_sfr_base() + AT91_SFR_OHCIICR, regval);
+}
+
 static TEE_Result atmel_sfr_probe(const void *fdt, int node,
 				  const void *compat_data __unused)
 {
