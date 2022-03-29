@@ -151,6 +151,11 @@ static struct clk *clk_dt_get_by_idx_prop(const char *prop_name,
 	while (idx < len) {
 		idx32 = idx / sizeof(uint32_t);
 		phandle = fdt32_to_cpu(prop[idx32]);
+		if (phandle == 0) {
+			clk_idx--;
+			idx += sizeof(phandle);
+			continue;
+		}
 
 		prv = clk_get_provider_by_phandle(phandle);
 		if (!prv)
