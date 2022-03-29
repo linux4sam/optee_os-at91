@@ -54,7 +54,7 @@ static bool __maybe_unused clk_check(struct clk *clk)
 	return true;
 }
 
-static void clk_compute_rate_no_lock(struct clk *clk)
+static void clk_update_rate_no_lock(struct clk *clk)
 {
 	unsigned long parent_rate = 0;
 
@@ -99,7 +99,7 @@ TEE_Result clk_register(struct clk *clk)
 	assert(clk_check(clk));
 
 	clk_init_parent(clk);
-	clk_compute_rate_no_lock(clk);
+	clk_update_rate_no_lock(clk);
 
 	DMSG("Registered clock %s, freq %lu", clk->name, clk_get_rate(clk));
 
@@ -199,7 +199,7 @@ static TEE_Result clk_set_rate_no_lock(struct clk *clk, unsigned long rate)
 	if (res)
 		return res;
 
-	clk_compute_rate_no_lock(clk);
+	clk_update_rate_no_lock(clk);
 
 	return TEE_SUCCESS;
 }
@@ -267,7 +267,7 @@ static TEE_Result clk_set_parent_no_lock(struct clk *clk, struct clk *parent,
 	clk->parent = parent;
 
 	/* The parent changed and the rate might also have changed */
-	clk_compute_rate_no_lock(clk);
+	clk_update_rate_no_lock(clk);
 
 out:
 	/* Call is needed to increment refcount on the new parent tree */
