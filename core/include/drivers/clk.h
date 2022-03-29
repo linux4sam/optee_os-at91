@@ -8,6 +8,7 @@
 
 #include <kernel/refcount.h>
 #include <stdint.h>
+#include <sys/queue.h>
 #include <tee_api_types.h>
 
 /* Flags for clock */
@@ -26,6 +27,7 @@
  * @flags: Specific clock flags
  * @enabled_count: Enable/disable reference counter
  * @num_parents: Number of parents
+ * @childs: Clock childs (used for clock rate propagation)
  * @parents: Array of possible parents of the clock
  */
 struct clk {
@@ -37,6 +39,8 @@ struct clk {
 	unsigned int flags;
 	struct refcount enabled_count;
 	size_t num_parents;
+	SLIST_ENTRY(clk) link;
+	SLIST_HEAD(, clk) childs;
 	struct clk *parents[];
 };
 

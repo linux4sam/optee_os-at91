@@ -30,6 +30,7 @@ struct clk *clk_alloc(const char *name, const struct clk_ops *ops,
 
 	clk->name = name;
 	clk->ops = ops;
+	SLIST_INIT(&clk->childs);
 	refcount_set(&clk->enabled_count, 0);
 
 	return clk;
@@ -57,6 +58,7 @@ static bool __maybe_unused clk_check(struct clk *clk)
 static void clk_update_rate_no_lock(struct clk *clk)
 {
 	unsigned long parent_rate = 0;
+	struct clk *child;
 
 	if (clk->parent)
 		parent_rate = clk->parent->rate;
@@ -65,6 +67,9 @@ static void clk_update_rate_no_lock(struct clk *clk)
 		clk->rate = clk->ops->get_rate(clk, parent_rate);
 	else
 		clk->rate = parent_rate;
+
+	SLIST_FOREACH(child, &clk->childs, link)
+		clk_update_rate_no_lock(child);
 }
 
 struct clk *clk_get_parent_by_index(struct clk *clk, size_t pidx)
@@ -92,6 +97,9 @@ static void clk_init_parent(struct clk *clk)
 		clk->parent = clk->parents[pidx];
 		break;
 	}
+
+	if (clk->parent)
+		SLIST_INSERT_HEAD(&clk->parent->childs, clk, link);
 }
 
 TEE_Result clk_register(struct clk *clk)
@@ -264,7 +272,10 @@ static TEE_Result clk_set_parent_no_lock(struct clk *clk, struct clk *parent,
 	if (res)
 		goto out;
 
+	SLIST_REMOVE(&clk->parent->childs, clk, clk, link);
+
 	clk->parent = parent;
+	SLIST_INSERT_HEAD(&clk->parent->childs, clk, link);
 
 	/* The parent changed and the rate might also have changed */
 	clk_update_rate_no_lock(clk);
