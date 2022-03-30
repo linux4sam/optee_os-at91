@@ -356,13 +356,13 @@
 			i2s0: i2s@f8050000 {
 				pinctrl-names = "default";
 				pinctrl-0 = <&pinctrl_i2s0_default>;
-				status = "disabled"; /* conflict with can0 */
+				status = "okay";
 			};
 
 			can0: can@f8054000 {
 				pinctrl-names = "default";
 				pinctrl-0 = <&pinctrl_can0_default>;
-				status = "okay";
+				status = "disabled"; /* conflict with can0 */
 			};
 
 			uart3: serial@fc008000 {
