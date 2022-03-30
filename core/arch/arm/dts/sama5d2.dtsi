@@ -750,8 +750,9 @@
 				dma-names = "tx", "rx";
 				clocks = <&pmc PMC_TYPE_PERIPHERAL 54>, <&pmc PMC_TYPE_GCK 54>;
 				clock-names = "pclk", "gclk";
-				assigned-clocks = <&pmc PMC_TYPE_CORE PMC_I2S0_MUX>;
-				assigned-clock-parents = <&pmc PMC_TYPE_GCK 54>;
+				assigned-clocks = <&pmc PMC_TYPE_CORE PMC_AUDIOPLL_FRACCK>, <&pmc PMC_TYPE_CORE PMC_AUDIOPLLCK>, <&pmc PMC_TYPE_GCK 54>, <&pmc PMC_TYPE_CORE PMC_I2S0_MUX>;
+				assigned-clock-parents = <0>, <0>, <&pmc PMC_TYPE_CORE PMC_AUDIOPLLCK>, <&pmc PMC_TYPE_GCK 54>;
+				assigned-clock-rates =  <663552000>, <24576000>, <24576000>;
 				status = "disabled";
 			};
 
