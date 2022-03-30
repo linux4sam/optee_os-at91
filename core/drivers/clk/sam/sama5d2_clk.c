@@ -410,6 +410,8 @@ static TEE_Result pmc_setup(const void *fdt, int nodeoffset,
 	if (!audiopll_fracck)
 		panic();
 
+	clk_set_rate(audiopll_fracck, 663552000);
+
 	clk = at91_clk_register_audio_pll_pad(pmc, "audiopll_padck",
 					      audiopll_fracck);
 	if (!clk)
