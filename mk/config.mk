@@ -128,7 +128,7 @@ CFG_OS_REV_REPORTS_GIT_SHA1 ?= y
 # that TEE_IMPL_VERSION contains the major and minor revision numbers.
 CFG_OPTEE_REVISION_MAJOR ?= 3
 CFG_OPTEE_REVISION_MINOR ?= 16
-CFG_OPTEE_REVISION_EXTRAVERSION ?=
+CFG_OPTEE_REVISION_EXTRAVERSION ?= -linux4sam-2022.10-rc2
 
 # Trusted OS implementation version
 TEE_IMPL_VERSION ?= $(shell git describe --always --dirty=-dev 2>/dev/null || \
