@@ -158,6 +158,18 @@ int fdt_get_dt_driver_cells(const void *fdt, int nodeoffset,
  */
 TEE_Result dt_driver_maybe_add_probe_node(const void *fdt, int nodeoffset);
 
+/*
+ * Probe a node childs 
+ *
+ * @fdt: FDT base address
+ * @nodeoffset: Node offset on the FDT for the node to be probed
+ *
+ * This function will probe the node childs based on their compatible. Unless
+ * CFG_DRIVERS_DT_RECURSIVE_PROBE is enabled, this function will not probe
+ * sub nodes of the childs if disabled or without compatible.
+ */
+void dt_driver_probe_node(const void *fdt, int nodeoffset);
+
 #ifdef CFG_DT_DRIVER_EMBEDDED_TEST
 /*
  * Return TEE_ERROR_NOT_IMPLEMENTED if test are not implemented
