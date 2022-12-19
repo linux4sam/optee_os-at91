@@ -25,6 +25,7 @@ srcs-$(CFG_DRA7_RNG) += dra7_rng.c
 srcs-$(CFG_STIH_UART) += stih_asc.c
 srcs-$(CFG_ACT8945A) += act8945a.c
 srcs-$(CFG_ATMEL_UART) += atmel_uart.c
+srcs-$(CFG_ATMEL_FLEXCOM) += atmel_flexcom.c
 srcs-$(CFG_ATMEL_TRNG) += atmel_trng.c
 srcs-$(CFG_ATMEL_RSTC) += atmel_rstc.c
 srcs-$(CFG_ATMEL_SHDWC) += atmel_shdwc.c atmel_shdwc_a32.S
