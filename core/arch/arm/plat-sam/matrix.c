@@ -33,6 +33,7 @@
 #include <io.h>
 #include <kernel/dt.h>
 #include <kernel/interrupt.h>
+#include <kernel/dt.h>
 #include <kernel/pm.h>
 #include <kernel/panic.h>
 #include <matrix.h>
