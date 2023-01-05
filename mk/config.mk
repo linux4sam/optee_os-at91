@@ -886,6 +886,10 @@ CFG_DRIVERS_RSTCTRL ?= n
 # on device-tree.
 CFG_DRIVERS_PINCTRL ?= n
 
+# When enabled, CFG_DRIVERS_GPIO embeds a gpio controller framework in
+# OP-TEE core to provide gpio support for drivers.
+CFG_DRIVERS_GPIO ?= n
+
 # The purpose of this flag is to show a print when booting up the device that
 # indicates whether the board runs a standard developer configuration or not.
 # A developer configuration doesn't necessarily has to be secure. The intention

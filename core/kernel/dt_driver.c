@@ -107,6 +107,7 @@ static void assert_type_is_valid(enum dt_driver_type type)
 	case DT_DRIVER_RSTCTRL:
 	case DT_DRIVER_UART:
 	case DT_DRIVER_PINCTRL:
+	case DT_DRIVER_GPIO:
 		return;
 	default:
 		assert(0);
@@ -185,6 +186,9 @@ int fdt_get_dt_driver_cells(const void *fdt, int nodeoffset,
 		break;
 	case DT_DRIVER_RSTCTRL:
 		cells_name = "#reset-cells";
+		break;
+	case DT_DRIVER_GPIO:
+		cells_name = "#gpio-cells";
 		break;
 	default:
 		panic();
