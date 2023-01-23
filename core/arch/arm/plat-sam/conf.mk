@@ -95,6 +95,7 @@ CFG_ATMEL_PIO ?= y
 CFG_DRIVERS_GPIO ?= y
 CFG_DRIVERS_I2C ?= y
 CFG_ATMEL_I2C ?= y
+CFG_MCP16502 ?= y
 endif
 
 # SCMI related configuration
