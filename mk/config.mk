@@ -554,6 +554,11 @@ CFG_DRIVERS_DT_RECURSIVE_PROBE ?= n
 CFG_SCMI_MSG_USE_CLK ?= n
 $(eval $(call cfg-depends-all,CFG_SCMI_MSG_USE_CLK,CFG_DRIVERS_CLK))
 
+# When enabled, CFG_SCMI_MSG_USE_REGULATOR will embed SCMI voltage functions
+# using the regulator framework and define plat_scmi_voltd* functions.
+CFG_SCMI_MSG_USE_REGULATOR ?= n
+$(eval $(call cfg-depends-all,CFG_SCMI_MSG_USE_REGULATOR,CFG_DRIVERS_REGULATOR CFG_DT))
+
 # This option enables OP-TEE to respond to SMP boot request: the Rich OS
 # issues this to request OP-TEE to release secondaries cores out of reset,
 # with specific core number and non-secure entry address.
