@@ -883,6 +883,10 @@ CFG_DRIVERS_CLK_EARLY_PROBE ?= $(CFG_DRIVERS_CLK_DT)
 $(eval $(call cfg-depends-all,CFG_DRIVERS_CLK_DT,CFG_DRIVERS_CLK CFG_DT))
 $(eval $(call cfg-depends-all,CFG_DRIVERS_CLK_FIXED,CFG_DRIVERS_CLK_DT))
 
+# When enabled, CFG_DRIVERS_REGULATOR embeds a regulator framework in
+# OP-TEE core to provide regulator support on subsystems of the devices.
+CFG_DRIVERS_REGULATOR ?= n
+
 # When enabled, CFG_DRIVERS_RSTCTRL embeds a reset controller framework in
 # OP-TEE core to provide reset controls on subsystems of the devices.
 CFG_DRIVERS_RSTCTRL ?= n
