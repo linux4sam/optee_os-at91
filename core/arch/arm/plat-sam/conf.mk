@@ -96,6 +96,10 @@ CFG_DRIVERS_GPIO ?= y
 CFG_DRIVERS_I2C ?= y
 CFG_ATMEL_I2C ?= y
 CFG_MCP16502 ?= y
+$(call force,CFG_DRIVERS_REGULATOR,y)
+ifeq ($(CFG_SCMI_MSG_DRIVERS),y)
+$(call force,CFG_SCMI_MSG_USE_REGULATOR,y)
+endif
 endif
 
 # SCMI related configuration

@@ -75,6 +75,9 @@ const char *plat_scmi_sub_vendor_name(void)
 /* Currently supporting only SCMI Base protocol */
 static const uint8_t plat_protocol_list[] = {
 	SCMI_PROTOCOL_ID_CLOCK,
+#ifdef CFG_SCMI_MSG_USE_REGULATOR
+	SCMI_PROTOCOL_ID_VOLTAGE_DOMAIN,
+#endif
 	0 /* Null termination */
 };
 
