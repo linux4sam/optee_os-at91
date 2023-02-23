@@ -90,4 +90,5 @@ CFG_ATMEL_PIOBU ?= y
 ifeq ($(PLATFORM_FLAVOR),sama5d27_wlsom1_ek)
 CFG_DRIVERS_PINCTRL ?= y
 CFG_ATMEL_PIO ?= y
+CFG_DRIVERS_GPIO ?= y
 endif
