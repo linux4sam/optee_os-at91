@@ -266,6 +266,16 @@ static TEE_Result at91_write_backup_data(void)
 	return TEE_SUCCESS;
 }
 
+static void at91_pm_change_state(enum pm_op op)
+{
+	int suspend_type = soc_pm.mode == AT91_PM_STANDBY ?
+			   PM_SUSPEND_STANDBY : PM_SUSPEND_TO_MEM;
+
+	uint32_t hint = SHIFT_U32(suspend_type, PM_HINT_SUSPEND_TYPE_SHIFT);
+
+	pm_change_state(op, hint);
+}
+
 static TEE_Result at91_enter_backup(void)
 {
 	int ret = -1;
@@ -275,7 +285,7 @@ static TEE_Result at91_enter_backup(void)
 	if (res)
 		return res;
 
-	pm_change_state(PM_OP_SUSPEND, 0);
+	at91_pm_change_state(PM_OP_SUSPEND);
 	ret = sm_pm_cpu_suspend((uint32_t)&soc_pm,
 				(void *)at91_suspend_sram_fn);
 	if (ret < 0) {
@@ -285,7 +295,7 @@ static TEE_Result at91_enter_backup(void)
 		res = TEE_SUCCESS;
 	}
 
-	pm_change_state(PM_OP_RESUME, 0);
+	at91_pm_change_state(PM_OP_RESUME);
 	if (res)
 		return res;
 
@@ -314,7 +324,9 @@ TEE_Result atmel_pm_suspend(uintptr_t entry, struct sm_nsec_ctx *nsec)
 	if (soc_pm.mode == AT91_PM_BACKUP) {
 		res = at91_enter_backup();
 	} else {
+		at91_pm_change_state(PM_OP_SUSPEND);
 		at91_suspend_sram_fn(&soc_pm);
+		at91_pm_change_state(PM_OP_RESUME);
 		res = TEE_SUCCESS;
 	}
 
