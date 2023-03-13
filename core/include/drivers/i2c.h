@@ -7,7 +7,8 @@
 #define __DRIVERS_I2C_H
 
 #include <kernel/dt.h>
-#include <sys/queue.h>
+#include <kernel/dt_driver.h>
+#include <libfdt.h>
 #include <tee_api_types.h>
 
 /**
@@ -15,15 +16,28 @@
  *
  * @__name: I2C device driver name
  * @__match_table: match table associated to the driver
- * @__probe: I2C probe function
+ * @__i2c_probe: I2C probe function with the following prototype:
+ * 	TEE_Result (*probe)(struct i2c_dev *i2c_dev, const void *fdt,
+			    int node, const void *compat_data);
+ * 
  */
-#define DEFINE_I2C_DEV_DRIVER(__name, __match_table, __probe, __type) \
+#define DEFINE_I2C_DEV_DRIVER(__name, __match_table, __i2c_probe) \
+	static __name ## probe_i2c_dev(const void *fdt, int node, \
+				       const void *compat_data __unused) \
+	{ \
+		struct i2c_dev *i2c_dev = NULL; \
+		TEE_Result res = TEE_ERROR_GENERIC; \
+		res = i2c_dt_get_dev(fdt, nodeoffset, &i2c_dev); \
+		if (res) \
+			return res; \
+		return __i2c_probe(i2c_dev, fdt, node, compat_data); \
+	} \
 	static const struct i2c_driver __name ## _i2c_driver = { \
 		.probe = __probe, \
 	}; \
 	DEFINE_DT_DRIVER(__name ## _dt_driver) = { \
 		.name = # __name, \
-		.type = __type, \
+		.type = DT_DRIVER_I2C, \
 		.match_table = __match_table, \
 		.driver = (const void *)&__name ## _i2c_driver, \
 		.probe = i2c_probe, \
@@ -81,38 +95,25 @@ struct i2c_ctrl_ops {
  * @ops: Operations associated to the I2C controller
  * @priv: Private data associated to the controller
  * @node: Device tree node associated the controller
- * @link: Link used internally in the list of controller
  */
 struct i2c_ctrl {
 	const struct i2c_ctrl_ops *ops;
 	void *priv;
 	int node;
-	SLIST_ENTRY(i2c_ctrl) link;
-};
-
-/**
- * struct i2c_driver - I2C driver
- *
- * @probe: Probe operation for I2C driver
- */
-struct i2c_driver {
-	TEE_Result (*probe)(struct i2c_dev *i2c_dev, const void *fdt,
-			    int node, const void *compat_data);
 };
 
 #ifdef CFG_DRIVERS_I2C
-
 /**
- * i2c_ctrl_register() - Register an I2C controller
+ * i2c_create_dev - Create and i2c_dev struct from device-tree
+ * 
+ * @i2c_ctrl: Controller to be used with this device
+ * @fdt: Device-tree to work on
+ * @node: Node to work on in @fdt provided device-tree 
  *
- * @i2c_ctrl: I2C controller to register
- * @fdt: Device tree used to parse I2C controller node
- * @node: I2C controller node
- *
- * Return a TEE_Result compliant value
+ * Return an i2c_dev struct filled from device-tree description
  */
-TEE_Result i2c_ctrl_register(struct i2c_ctrl *i2c_ctrl, const void *fdt,
-			     int node);
+struct i2c_dev *i2c_create_dev(struct i2c_ctrl *i2c_ctrl, const void *fdt,
+			       int node);
 
 /**
  * i2c_write() - Execute an I2C write on the I2C bus
@@ -172,28 +173,29 @@ static inline TEE_Result i2c_smbus_raw(struct i2c_dev *i2c_dev, uint8_t dir,
 	return i2c_dev->ctrl->ops->smbus(i2c_dev, dir, proto, cmd_code, buf,
 					 len);
 }
-
 /**
- * i2c_probe() - Internal function used to wrap I2C devices probing
+ * i2c_dt_get_dev - Get an i2c device from a node
  *
- * @fdt: Device tree used for probing
- * @node: Device tree node used for probing
- * @compat_data: Data associated to the compatible that was matched
- * @dt_drv: dt_driver structure used for probing
+ * @fdt: Device tree to work on
+ * @nodeoffset: Node offset of the subnode containing a 'resets' property
+ * @index: Reset controller index in 'resets' property
+ * @i2c: Output reset controller reference upon success
  *
- * Return a TEE_Result compliant value
+ * Return TEE_SUCCESS in case of success
+ * Return TEE_ERROR_DEFER_DRIVER_INIT if reset controller is not initialized
+ * Return TEE_ERROR_ITEM_NOT_FOUND if the resets property does not exist
+ * Return a TEE_Result compliant code in case of error
  */
-TEE_Result i2c_probe(const void *fdt, int node, const void *compat_data,
-		     const struct dt_driver *dt_drv);
-
-#else
-
-static inline TEE_Result i2c_ctrl_register(struct i2c_ctrl *i2c_ctrl __unused,
-					   const void *fdt __unused,
-					   int node __unused)
+static inline TEE_Result i2c_dt_get_dev(const void *fdt, int nodeoffset,
+					struct i2c_dev **i2c_dev)
 {
-	return TEE_ERROR_NOT_SUPPORTED;
+	TEE_Result res = TEE_ERROR_GENERIC;
+
+	*i2c_dev = dt_driver_device_from_node_idx_prop(NULL, fdt, nodeoffset, 0,
+						       DT_DRIVER_I2C, &res);
+	return res;
 }
+#else
 
 static inline TEE_Result i2c_write(struct i2c_dev *i2c_dev __unused,
 				   const uint8_t *buf __unused,
@@ -218,15 +220,60 @@ static inline TEE_Result i2c_smbus_raw(struct i2c_dev *i2c_dev __unused,
 	return TEE_ERROR_NOT_SUPPORTED;
 }
 
-static inline TEE_Result i2c_probe(const void *fdt __unused,
-				   int node __unused,
-				   const void *compat_data __unused,
-				   const struct dt_driver *dt_drv __unused)
+static inline TEE_Result i2c_dt_get_dev(const void *fdt __unused,
+					int nodeoffset __unused,
+					struct i2c_dev **i2c_dev)
 {
+	*i2c_dev = NULL;
 	return TEE_ERROR_NOT_SUPPORTED;
 }
-
 #endif
+
+/**
+ * i2c_dt_get_func - Typedef of function to get reset controller from
+ * devicetree properties
+ *
+ * @a: Pointer to devicetree description of the reset controller to parse
+ * @data: Pointer to data given at i2c_dt_register_provider() call
+ * @res: Output result code of the operation:
+ *	TEE_SUCCESS in case of success
+ *	TEE_ERROR_DEFER_DRIVER_INIT if reset controller is not initialized
+ *	Any TEE_Result compliant code in case of error.
+ *
+ * Returns a struct i2c pointer pointing to a reset controller matching
+ * the devicetree description or NULL if invalid description in which case
+ * @res provides the error code.
+ */
+typedef struct i2c_dev *(*i2c_dt_get_func)(struct dt_driver_phandle_args *a,
+					   void *data, TEE_Result *res);
+
+/**
+ * i2c_dt_register_provider - Register a reset controller provider
+ *
+ * @fdt: Device tree to work on
+ * @nodeoffset: Node offset of the reset controller
+ * @get_dt_i2c: Callback to match the reset controller with a struct i2c
+ * @data: Data which will be passed to the get_dt_i2c callback
+ * Returns TEE_Result value
+ */
+static inline
+TEE_Result i2c_register_provider(const void *fdt, int nodeoffset,
+				 i2c_dt_get_func get_dt_i2c, void *data)
+{
+	int subnode = -1;
+	TEE_Result res = TEE_ERROR_GENERIC;
+
+	res = dt_driver_register_provider(fdt, nodeoffset,
+					  (get_of_device_func)get_dt_i2c,
+					  data, DT_DRIVER_I2C);
+	if (res)
+		return res;
+
+	fdt_for_each_subnode(subnode, fdt, nodeoffset)
+		dt_driver_maybe_add_probe_node(fdt, subnode);
+
+	return TEE_SUCCESS;
+}
 
 /**
  * i2c_smbus_read_byte() - Execute a read byte SMBus protocol operation

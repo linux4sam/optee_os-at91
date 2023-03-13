@@ -106,6 +106,7 @@ static void assert_type_is_valid(enum dt_driver_type type)
 	case DT_DRIVER_CLK:
 	case DT_DRIVER_RSTCTRL:
 	case DT_DRIVER_UART:
+	case DT_DRIVER_I2C:
 		return;
 	default:
 		assert(0);
@@ -175,6 +176,8 @@ int fdt_get_dt_driver_cells(const void *fdt, int nodeoffset,
 	case DT_DRIVER_RSTCTRL:
 		cells_name = "#reset-cells";
 		break;
+	case DT_DRIVER_I2C:
+		return 0;
 	default:
 		panic();
 	}
@@ -246,6 +249,29 @@ static void *device_from_provider_prop(struct dt_driver_provider *prv,
 	return device;
 }
 
+static void *dt_driver_get_device_from_parent(const void *fdt, int nodeoffset,
+					      enum dt_driver_type type,
+					      TEE_Result *res)
+{
+	int parent = -1;
+	struct dt_driver_provider *prv = NULL;
+
+	parent = fdt_parent_offset(fdt, nodeoffset);
+	if (parent < 0) {
+		*res =  TEE_ERROR_BAD_FORMAT;
+		return NULL;
+	}
+
+	prv = dt_driver_get_provider_by_node(parent, type);
+	if (!prv) {
+		/* No provider registered yet */
+		*res = TEE_ERROR_DEFER_DRIVER_INIT;
+		return NULL;
+	}
+
+	return device_from_provider_prop(prv, fdt, nodeoffset, NULL, res);
+}
+
 void *dt_driver_device_from_node_idx_prop(const char *prop_name,
 					  const void *fdt, int nodeoffset,
 					  unsigned int prop_idx,
@@ -260,6 +286,10 @@ void *dt_driver_device_from_node_idx_prop(const char *prop_name,
 	uint32_t phandle = -1;
 	const uint32_t *prop = NULL;
 	struct dt_driver_provider *prv = NULL;
+
+	if (type == DT_DRIVER_I2C)
+		return dt_driver_get_device_from_parent(fdt, nodeoffset, type,
+							res);
 
 	prop = fdt_getprop(fdt, nodeoffset, prop_name, &len);
 	if (!prop) {
