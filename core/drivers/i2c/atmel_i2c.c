@@ -7,6 +7,7 @@
 #include <drivers/clk.h>
 #include <drivers/clk_dt.h>
 #include <drivers/i2c.h>
+#include <drivers/pinctrl.h>
 #include <io.h>
 #include <kernel/dt_driver.h>
 #include <libfdt.h>
@@ -300,9 +301,20 @@ static TEE_Result atmel_i2c_node_probe(const void *fdt, int node,
 	struct atmel_i2c *atmel_i2c = NULL;
 	TEE_Result res = TEE_ERROR_GENERIC;
 	int status = _fdt_get_status(fdt, node);
+	struct pinctrl_state *state = NULL;
 
 	if (status != DT_STATUS_OK_SEC)
 		return TEE_SUCCESS;
+
+	res = pinctrl_get_state_by_name(fdt, node, NULL, &state);
+	if (res)
+		return res;
+
+	res = pinctrl_apply_state(state);
+	if (res)
+		return res;
+
+	pinctrl_free_state(state);
 
 	i2c_ctrl = calloc(1,
 			  sizeof(struct i2c_ctrl) + sizeof(struct atmel_i2c));
