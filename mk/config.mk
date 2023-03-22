@@ -908,6 +908,9 @@ CFG_DRIVERS_GPIO ?= n
 # When enabled, CFG_DRIVERS_I2C provides I2C controller and devices support.
 CFG_DRIVERS_I2C ?= n
 
+# When enabled, CFG_DRIVERS_NVMEM provides nvmem provider and consumer support.
+CFG_DRIVERS_NVMEM ?= n
+
 # The purpose of this flag is to show a print when booting up the device that
 # indicates whether the board runs a standard developer configuration or not.
 # A developer configuration doesn't necessarily has to be secure. The intention
