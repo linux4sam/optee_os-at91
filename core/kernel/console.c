@@ -40,6 +40,8 @@ void register_serial_console(struct serial_chip *chip)
 }
 
 #ifdef CFG_DT
+static bool dt_console_setup;
+
 static int find_chosen_node(void *fdt)
 {
 	int offset = 0;
@@ -126,6 +128,10 @@ void configure_console_from_dt(void)
 	void *fdt;
 	int offs;
 
+	/* DT console has already been setup */
+	if (dt_console_setup)
+		return;
+
 	fdt = get_dt();
 	if (get_console_node_from_dt(fdt, &offs, &uart, &parms))
 		return;
@@ -154,9 +160,18 @@ void configure_console_from_dt(void)
 
 	IMSG("Switching console to device: %s", uart);
 	register_serial_console(dev);
+	dt_console_setup = true;
 out:
 	nex_free(uart);
 	nex_free(parms);
 }
+
+static TEE_Result configure_console_from_dt_initcall(void)
+{
+	configure_console_from_dt();
+
+	return TEE_SUCCESS;
+}
+driver_init_late(configure_console_from_dt_initcall);
 
 #endif /* CFG_DT */
