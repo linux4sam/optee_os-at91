@@ -47,6 +47,22 @@
 			linux,default-trigger = "heartbeat";
 		};
 	};
+
+	nvmem_otp_key: nvmem-otp-key@0 {
+		compatible = "optee,nvmem-otp-key";
+		nvmem-cells = <&hw_unique_key>, <&die_id>;
+		nvmem-cell-names = "hw_unique_key", "die_id";
+	};
+};
+
+&sfc {
+	hw_unique_key: hw-key@0 {
+		reg = <0x0 0x10>;
+	};
+
+	die_id: die-id@10 {
+		reg = <0x10 0x4>;
+	};
 };
 
 &adc {
