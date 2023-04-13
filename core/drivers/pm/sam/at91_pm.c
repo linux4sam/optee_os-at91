@@ -12,6 +12,7 @@
 #include <kernel/boot.h>
 #include <kernel/dt.h>
 #include <kernel/pm.h>
+#include <kernel/tz_ssvce_pl310.h>
 #include <libfdt.h>
 #include <matrix.h>
 #include <mm/core_memprot.h>
@@ -321,6 +322,7 @@ TEE_Result atmel_pm_suspend(uintptr_t entry, struct sm_nsec_ctx *nsec)
 
 	sm_save_unbanked_regs(&nsec->ub_regs);
 
+	arm_cl2_cleaninvbyway(pl310_base());
 	if (soc_pm.mode == AT91_PM_BACKUP) {
 		res = at91_enter_backup();
 	} else {
